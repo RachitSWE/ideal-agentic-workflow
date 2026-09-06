@@ -1,0 +1,16 @@
+{
+  "name": "ideal-agentic-workflow",
+  "version": "1.1.0",
+  "description": "Enforces S1–S11 Agentic Engineering: audit-first, plan-reviewed, code-verified, commit-disciplined development.",
+  "author": {
+    "name": "RachitSWE",
+    "url": "https://github.com/RachitSWE"
+  },
+  "keywords": [
+    "workflow",
+    "audit",
+    "agentic-engineering",
+    "review-driven",
+    "tdd"
+  ]
+}
