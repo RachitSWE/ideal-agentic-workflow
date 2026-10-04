@@ -1,0 +1,17 @@
+{
+  "git-add-safety-gate": {
+    "enabled": true,
+    "PreToolUse": [
+      {
+        "matcher": "run_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -Command \"if ($env:COMMAND_LINE -match 'git\\s+add\\s+\\.') { Write-Host '[SAFETY GATE] git add . is strictly prohibited. Stage files surgically per-file.'; exit 1 }\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

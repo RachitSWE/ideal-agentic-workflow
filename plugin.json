@@ -1,16 +1,21 @@
 {
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
   "name": "ideal-agentic-workflow",
-  "version": "1.1.0",
-  "description": "Enforces S1–S11 Agentic Engineering: audit-first, plan-reviewed, code-verified, commit-disciplined development.",
+  "version": "1.3.0",
+  "description": "Enterprise-grade agentic engineering: S0–S11 Implementation Pipeline and SP1–SP6 Spec Architecture Pipeline with multi-agent consensus, domain-driven testing, and strict senior invariants.",
   "author": {
     "name": "RachitSWE",
     "url": "https://github.com/RachitSWE"
   },
+  "license": "All Rights Reserved",
   "keywords": [
     "workflow",
     "audit",
+    "spec-pipeline",
     "agentic-engineering",
     "review-driven",
-    "tdd"
+    "tdd",
+    "domain-driven-testing",
+    "senior-developer"
   ]
 }

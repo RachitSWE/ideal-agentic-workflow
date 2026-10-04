@@ -1,113 +1,121 @@
-# Agent Behavioral Rules
+# Agent Behavioral Rules & Invariant Charter
 
-This document defines the strict behavioral constraints for any AI agent operating within the `ideal-agentic-workflow` plugin. 
+This document defines the absolute, non-negotiable behavioral constraints for any AI agent operating within the `ideal-agentic-workflow` plugin. 
 
 These rules MUST be loaded on every session. 
 
-They exist to prevent "Vibe Coding" and enforce disciplined Agentic Engineering. 
+They exist to eliminate "Vibe Coding" and enforce disciplined, deterministic Senior Agentic Engineering. 
 
 Agents MUST NOT treat these rules as suggestions; they are absolute invariants. 
+Any violation breaks the fundamental integrity of the workflow and voids session verification.
 
-Any violation of these rules breaks the fundamental integrity of the workflow.
+---
 
-The reader of this document is the AI agent executing the session.
+## 1. Core Operating Philosophy: Zero Vibe Coding
 
-These rules govern the entire lifecycle of the S1-S11 process.
+1. **Deterministic Over Exploratory**: Every action must stem from a verified plan (`plan.md`), mapped to a discrete task (`task.md`), backed by automated test evidence, and signed off by peer subagents.
+2. **Evidence Before Assertions**: An agent MUST NEVER claim a bug is resolved, a feature is implemented, or a test passes without running the actual execution command and inspecting the output.
+3. **No Autonomous Scope Creep**: Implement ONLY what is specified in the task list. Do not refactor adjacent files or "tidy up" unrelated code unless explicitly scheduled.
 
-They guarantee that no code is committed without proper planning, testing, and review.
+---
 
-## Workflow Invariants
+## 2. The 8 Anti-Patterns of Agentic Coding (AP-001 through AP-008)
 
-The following rules govern the sequence of operations within the workflow. 
+Auditors (S2) and Reviewers (S4, S8) MUST actively detect and reject any code or session artifact displaying these anti-patterns:
 
-They ensure that no step is skipped and that prerequisites are strictly met. 
+### AP-001: Simulation & Mock Code in Production
+- **Violation**: Inserting mock return values, dummy JSON payloads, simulated delays (`setTimeout`, `sleep`), or placeholder returns (`return true; // placeholder`) into production paths.
+- **Rule**: Every production code path MUST be fully implemented, connecting to real database queries, APIs, and business rules. Mocks belong strictly inside test suites.
 
-Skipping these steps leads to unreviewed code and corrupted session state.
+### AP-002: Conversational & Vibe Comments
+- **Violation**: Polluting source files with conversational AI commentary such as `// Added as per task requirements`, `// Modified to fix null pointer`, or `// Antigravity agent implementation`.
+- **Rule**: Code must be self-documenting. Comments are allowed ONLY to explain non-obvious domain rationale or mathematical algorithms ("why", never "what" or "who").
 
-We MUST enforce these invariants to maintain the workflow's integrity.
+### AP-003: Unimplemented Stubs & Placeholders
+- **Violation**: Leaving `TODO`, `FIXME`, `pass`, `throw new UnsupportedOperationException()`, or empty functions in committed code.
+- **Rule**: If a feature is scheduled in `task.md`, it MUST be completely implemented. Unfinished code MUST NOT be marked `[x]` or committed.
 
-- NEVER write production code before plan.md exists AND is in LGTM status from S4.
-- NEVER invoke S8 code review if any automated test is failing.
-- NEVER write a review file yourself. Review must come from real subagents or R-Agent.
-- NEVER proceed to S10 if any task in task.md is not [x].
-- ALWAYS read GEMINI.md in full before reading any source file.
-- ALWAYS initialize .agents/session-SHA/ before starting S2.
+### AP-004: Compiler & Linter Appeasement Hacks
+- **Violation**: Silencing compiler or linter errors via escape hatches: TypeScript `any`, `@ts-ignore`, `@ts-nocheck`, ESLint disable comments, blanket Python `except Exception: pass`, or suppressing warnings.
+- **Rule**: Fix the underlying architectural mismatch, type definition, or interface signature. Appeasement hacks are treated as critical defects.
 
-## File System Rules
+### AP-005: Bulk Staging & Nuclear Commits
+- **Violation**: Executing `git add .`, `git add -A`, or staging files blindly without inspecting the diff.
+- **Rule**: Every modified file MUST be staged individually and explicitly (`git add path/to/file.ts`). Plugin hooks actively block `git add .`.
 
-These constraints dictate where the agent is allowed to write files. 
+### AP-006: Context & Token Budget Exhaustion
+- **Violation**: Dumping entire monolithic source files into subagent prompts or conversation transcripts, causing memory saturation and degraded model reasoning.
+- **Rule**: Pass only relevant file ranges, structured diff summaries (`commands/measure-diff.ps1`), and targeted specifications (`submit(n).md`).
 
-They prevent the project root from being cluttered with temporary artifacts. 
+### AP-007: Ghost Edits & State Isolation Violations
+- **Violation**: Writing temporary files, scratch scripts, or unmanaged test outputs to the workspace root or system temp directories.
+- **Rule**: All session state, audit outputs, plans, reviews, and temporary markers MUST live exclusively inside `.agents/session-[SHA]/`.
 
-They also protect the user's host system from unintended modifications.
+### AP-008: Destructive Documentation Mutations
+- **Violation**: Deleting, truncating, or refactoring human-authored sections in `GEMINI.md` or architecture documents.
+- **Rule**: Agents may append new knowledge, update feature statuses, and record anti-patterns. Deleting or overwriting user documentation is strictly forbidden.
 
-We MUST strictly isolate all agent-generated state to the session directory.
+---
 
-This isolation ensures that a failed workflow session does not leave the repository in an inconsistent state.
+## 3. Workflow Lifecycle Invariants (S1–S11)
 
-- Temp files go in .agents/session-SHA/ ONLY. Never in project root or system temp.
-- Never modify files outside the project root (no system config changes).
-- Anti-patterns.md additions at S11 are the only autonomous writes to plugin files.
+The workflow follows a strict, non-negotiable state machine:
+`S1 (Context) -> S2 (Audit) -> S3 (Plan) -> S4 (Plan Review) -> S5 (Plan Fix) -> S6 (Code) -> S7 (Test) -> S8 (Code Review) -> S9 (Bug Fix) -> S10 (Commit) -> S11 (Sync)`
 
-## Code Rules
+- **Pre-Code Gate**: NEVER write production code before `plan.md` exists and is signed off with `LGTM` by all S4 reviewers.
+- **Pre-Review Gate**: NEVER invoke S8 Code Review if any automated test in S7 is failing.
+- **Consensus Gate**: Zero self-review. Review files (`review(n).md`) MUST originate from independently spawned subagents or R-Agent. A single `CHANGES_REQUESTED` blocks advancement to S10.
+- **Commit Gate**: NEVER proceed to S10 Git Commit if any task in `task.md` remains unchecked `[ ]`.
+- **First Action Invariant**: ALWAYS read `GEMINI.md` in full before reading or modifying any source file.
+- **Initialization Invariant**: ALWAYS initialize `.agents/session-[SHA]/` before starting S2 or S3.
 
-The following rules enforce the "Senior Developer Mindset" during code generation. 
+---
 
-They ensure the output is production-ready, maintainable, and aligned with existing patterns. 
+## 4. File System & Memory Isolation
 
-Failing to follow these rules results in technical debt and brittle implementations.
+- **Session Quarantine**: All agent-generated state is isolated to `.agents/session-[SHA]/`:
+  ```
+  .agents/session-[SHA]/
+  ├── audit/bin/           # S2 Auditor outputs
+  ├── code-review/submit/  # S4/S8 Submission payloads
+  ├── code-review/review/  # S4/S8 Review reports
+  ├── plan.md              # S3 Master implementation plan
+  ├── task.md              # S3 Prioritized task checklist
+  ├── context.md           # S1 Ingested context & stack packs
+  ├── mode.txt             # S1 Operating mode
+  └── CHECKLIST.md         # S1-S11 Master execution checklist
+  ```
+- **External Boundaries**: Never touch files outside the project root directory. System configuration modifications are strictly prohibited.
+- **Knowledge Base Sync**: At S11, autonomous additions to `anti-patterns.md` and `GEMINI.md` are the only permitted post-implementation writes.
 
-We MUST reject any code that violates these standards.
+---
 
-- Zero verbose comments in committed code. (See AP-002)
-- Zero simulation/mock code in committed code. (See AP-001)
-- Zero TODO/FIXME in committed code.
-- Zero architecture violations for compiler appeasement. (See AP-004)
+## 5. Git Commit Protocol (Conventional & Atomic)
 
-## Commit Rules
+Every commit generated during S10 Git Commit MUST adhere to the following schema:
+- **Format**: Conventional Commits standard: `<type>(<scope>): <subject>`
+  - Permitted types: `feat`, `fix`, `refactor`, `perf`, `test`, `build`, `ci`, `docs`, `chore`
+- **Subject Line**:
+  - Maximum 72 characters.
+  - Imperative mood ("add feature", not "added" or "adds").
+  - All lowercase, no trailing period.
+  - Mandatory blank line between subject and body.
+- **Commit Body**:
+  - Mandatory for every commit.
+  - All lowercase, maximum 150 characters.
+  - Explains the rationale and impact of the change.
+- **Atomic Insertion Sizing**:
+  - Target ~50–150 insertions per commit.
+  - If insertions exceed 150 lines: the body MUST include a clear explanation of why this change represents an indivisible atomic unit.
+  - Never break working code or split tests away from their implementation just to meet sizing targets.
 
-These rules define the required format for Git commits generated by the agent. 
+---
 
-They ensure the project maintains a clear, traceable, and human-readable history. 
+## 6. Reviewer Consensus Standard
 
-Deviating from this format breaks release automation and makes regressions harder to track.
-
-We MUST format every commit according to these exact constraints.
-
-- Subject line: max 72 characters, imperative mood, Conventional Commits format. [HARD]
-- Body: always present, always lowercase, max 150 characters. [HARD]
-- Blank line between subject and body: mandatory. [HARD]
-- Target ~50–150 insertions per commit. [GUIDELINE — justify in body if exceeded; never split atomic units]
-- If > 150 insertions: body must contain one sentence explaining why this is one atomic unit.
-
-## Review Rules
-
-These rules govern how the agent interacts with peer review subagents. 
-
-They ensure that the review process is rigorous and that no issues are ignored. 
-
-A single finding from a reviewer is enough to block progression.
-
-We MUST achieve absolute consensus before moving to the next stage.
-
-This prevents unverified code from ever being committed to the main branch. 
-
-It mimics the human pull request approval process, ensuring high code quality.
-
-- LGTM from ALL reviewers required before proceeding. One CHANGES_REQUESTED blocks.
-- Reviewer personas must match the project type (fullstack vs minecraft).
-
-## GEMINI.md Rules
-
-These rules restrict how the agent may modify the project's primary knowledge base. 
-
-They protect the user's manual documentation efforts from being overwritten by the agent. 
-
-The agent's role is to append new knowledge, not to refactor existing human-written context.
-
-We MUST respect these boundaries to maintain a stable source of truth.
-
-- May ADD new content to any section.
-- May NOT DELETE any section or content authored by the user.
-- May NOT rename sections.
-- The directory structure section is inviolable — never shorten it.
+- Unanimous `LGTM` from all assigned reviewers is required.
+- If ANY reviewer emits `CHANGES_REQUESTED`:
+  - Transition immediately to S5 (for plan changes) or S9 (for code changes).
+  - Remediate the exact issues cited in the review.
+  - Re-run verification and resubmit for peer review.
+- Reviewers MUST be matched to the detected project stack using `skills/s8-code-review/resources/task-reviewer-matrix.md`.
