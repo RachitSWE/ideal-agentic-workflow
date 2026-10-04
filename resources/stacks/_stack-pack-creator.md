@@ -16,7 +16,7 @@ The process of creating a new stack pack is initiated automatically at the end o
 Once the user approves the creation of the stack pack, the agent must perform the necessary research to generate accurate constraints. The agent is expected to rely on its training data and web search tools to gather the most up-to-date best practices.
 1. Use web search tools to research the stack's current version constraints, architectural best practices, and common anti-patterns.
 2. Draft the pack following the exact 5-section format defined in Section 4 below.
-3. Update `resources/fullstack-persona-bank.md` or `resources/minecraft-persona-bank.md` to include any new audit angles this stack introduces.
+3. Update `skills/s2-codebase-audit/resources/fullstack-persona-bank.md` or `skills/s2-codebase-audit/resources/minecraft-persona-bank.md` to include any new audit angles this stack introduces.
 
 ## 4. Required Stack Pack Structure
 Every stack pack MUST contain exactly five sections, in the exact order listed below. Deviation from this structure causes S2 and S6 steps to miss expected sections, breaking the audit process. This format ensures consistency across all plugins.
