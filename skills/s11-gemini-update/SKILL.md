@@ -1,6 +1,6 @@
 ---
-name: "S11 GEMINI.md Update"
-description: "Executes the final documentation sync, enforcing strict non-destructive schemas to maintain project context before closing the loop."
+name: s11-gemini-update
+description: "Executes the final documentation sync and PRD generation, maintaining authoritative project context, schema integrity, and monotonic updates."
 ---
 
 # S11 GEMINI.md Update
@@ -15,7 +15,23 @@ The orchestrating agent MUST strictly manage the file modifications, emit strate
 Failure to properly execute this phase leaves the session in an incomplete state and compromises the success of subsequent workflows.
 The S11 phase explicitly marks the boundary between the current session and the start of a new, contextually fresh conversation.
 
-## 2. Hard Gating and Modal Update Rules
+---
+
+## 2. Mandatory Files to Read at this Step
+
+Before modifying `GEMINI.md` or closing the loop, the agent MUST explicitly read:
+1. **Schema & Evolution Guidelines**:
+   - `skills/s11-gemini-update/resources/gemini-schema.md` (Strict non-destructive editing boundaries, section immutability, and schema rules)
+   - `resources/gemini-template.md` (Authoritative baseline GEMINI.md template reference)
+2. **Skill Suggestion Registry**:
+   - `skills/s11-gemini-update/resources/global-skill-suggester.md` (Taxonomy and selection criteria for recommending 1-3 global skills)
+3. **Target Repository State**:
+   - `GEMINI.md` (The living Single Source of Truth document in the repository root)
+   - `.agents/session-[SHA]/CHECKLIST.md` (Mark S11 complete before emitting loop signal)
+
+---
+
+## 3. Hard Gating and Modal Update Rules
 The integrity of the documentation update relies entirely on the agent verifying that the repository state is perfectly clean before modifying the knowledge base. 
 The agent MUST explicitly verify the following absolute gating rule before attempting any changes to `GEMINI.md`.
 The agent MUST acknowledge the absolute prohibition: "No S11 before commit is clean."
@@ -26,10 +42,10 @@ The agent MUST explicitly mandate the inviolable rules: "Never rename sections" 
 For Fast Mode, the agent MUST apply the override: "Lightweight update — only Section 5 (Open Features) if applicable."
 For the Trivial Protocol, the agent MUST apply the override: "Skip S11 (no knowledge base update needed for doc-only changes)."
 
-### 2.1 Finalization and Loop Closure Protocol
-Before executing any modifications, the agent MUST explicitly instruct itself to read `resources/gemini-schema.md` to internalize the strict non-destructive editing boundaries. 
+### 3.1 Finalization and Loop Closure Protocol
+Before executing any modifications, the agent MUST explicitly instruct itself to read `skills/s11-gemini-update/resources/gemini-schema.md` to internalize the strict non-destructive editing boundaries. 
 The agent MUST surgically apply its updates to `GEMINI.md` using precise file editing tools, ensuring zero unintended deletions occur.
-Once the documentation is successfully synchronized, the agent MUST instruct itself to read `resources/global-skill-suggester.md`.
+Once the documentation is successfully synchronized, the agent MUST instruct itself to read `skills/s11-gemini-update/resources/global-skill-suggester.md`.
 The agent MUST emit 1 to 3 highly contextual Global Skill Suggestions to the user, based on the friction points observed during the session.
 After presenting the skill suggestions, the agent MUST formally terminate the workflow sequence by emitting the exact loop signal to the user.
 The agent MUST mandate emitting the explicit loop signal at the very end: "Start new conversation → S1".

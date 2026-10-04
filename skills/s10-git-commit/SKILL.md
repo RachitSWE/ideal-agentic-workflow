@@ -1,5 +1,5 @@
 ---
-name: "S10 Git Commit"
+name: s10-git-commit
 description: "Executes the final staging and commit phase, strictly enforcing conventional commit formatting, atomic sizing, and workflow completion gates."
 ---
 
@@ -15,19 +15,40 @@ The orchestrating agent MUST strictly manage the commit sizing, enforce exact fo
 Failure to properly execute this phase will break semantic versioning tools and severely degrade the maintainability of the project.
 The S10 phase explicitly transitions the workflow from active development into documentation synchronization.
 
-## 2. Hard Gating and Modal Sizing Rules
+---
+
+## 2. Mandatory Files to Read at this Step
+
+Before staging files or creating git commits, the agent MUST explicitly read:
+1. **Commit Formatting & Sizing Guidelines**:
+   - `skills/s10-git-commit/resources/commit-examples.md` (Conventional Commit type taxonomy, subjects, and scopes)
+   - `skills/s10-git-commit/resources/breaking-change-guide.md` (Formatting breaking API footers and migrations)
+   - `skills/s10-git-commit/resources/commit-split-guide.md` (Rules for decomposing commits exceeding 150 insertions)
+2. **Commit Automation Commands & Hooks**:
+   - `commands/measure-diff.ps1` (Measures insertions and validates atomic threshold)
+   - `commands/stage-commit.ps1` (Automated script for surgical per-file staging and validation)
+   - `hooks.json` (Pre-commit hook triggers and invariant validations)
+3. **Session Verification State**:
+   - `.agents/session-[SHA]/task.md` (Enforce invariant: 100% of tasks must be marked `[x]`)
+   - `.agents/session-[SHA]/CHECKLIST.md` (Track S10 completion)
+
+---
+
+## 3. Hard Gating and Modal Sizing Rules
 The integrity of the commit history relies entirely on the agent verifying that all assigned work is actually finished before modifying the git tree. 
 The agent MUST explicitly verify the following absolute gating rule before running any `git commit` commands.
 The agent MUST acknowledge the absolute prohibition: "No commit before all tasks [x] in task.md."
 If any task in the `.agents/session-[SHA]/task.md` file remains incomplete or marked as in-progress (`[/]`), the agent MUST immediately loop back to S6 Coding.
-Once the progression gate is cleared, the agent MUST apply the correct commit sizing constraints based on the active session mode.
+Once the progression gate is cleared, the agent MUST measure diff insertions using `git diff --stat HEAD` or `commands/measure-diff.ps1`.
 For Standard and Duolithic Modes, the agent MUST adhere to the sizing rule: "~50-150 insertions per commit (guideline)."
-The agent MUST "never split atomic units", and if a commit exceeds 150 insertions, the body MUST contain "one sentence explaining why this is one atomic unit".
+The agent MUST "never split atomic units". If a commit exceeds 150 insertions, the agent MUST read `skills/s10-git-commit/resources/commit-split-guide.md`.
+If the change is truly atomic, the commit body MUST contain "one sentence explaining why this is one atomic unit". If not, the agent MUST follow `skills/s10-git-commit/resources/commit-split-guide.md` to stage per-file into split commits.
 For Fast Mode, the agent MUST apply the override: "No size target — commit what the fix requires."
 For the Trivial Protocol, the agent MUST apply the override: "Single commit with type `docs` or `chore`."
+Under NO circumstances may the agent use `git add .`; staging MUST always be performed surgically per-file (`git add <file>` or `commands/stage-commit.ps1`).
 
-### 2.1 Commit Formatting Protocol
-Before finalizing the git commit message, the agent MUST explicitly instruct itself to read `resources/commit-examples.md` and `resources/breaking-change-guide.md`. 
+### 3.1 Commit Formatting Protocol
+Before finalizing the git commit message, the agent MUST explicitly instruct itself to read `skills/s10-git-commit/resources/commit-examples.md` and `skills/s10-git-commit/resources/breaking-change-guide.md`. 
 The agent MUST study these resources to ensure its drafted message exactly matches the project's rigid stylistic requirements.
 The agent MUST enforce the core formatting rules: the subject line MUST be a maximum of 72 characters, imperative mood, and follow the Conventional Commits format.
 The agent MUST include a mandatory blank line between the subject and the body.

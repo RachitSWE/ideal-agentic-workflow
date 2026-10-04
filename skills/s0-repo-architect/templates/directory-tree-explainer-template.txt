@@ -1,0 +1,17 @@
+// Directory and File Explainer Template Reference
+// Structure: [Path or Filename]: "[Concise One-Line Explainer]"
+// Used by scripts/generate-ascii-tree.js to automatically annotate ASCII directory trees.
+
+{
+  "root": "Root project directory housing all client, server, and deployment components",
+  "app/": "Next.js App Router root containing all application routes, layout templates, and global stylesheets",
+  "app/layout.tsx": "Root HTML layout wrapper providing global font configurations and core metadata",
+  "app/page.tsx": "Public landing page and gateway redirecting unauthenticated visitors",
+  "backend/": "Spring Boot enterprise backend handling REST APIs, security, and external gateways",
+  "backend/pom.xml": "Maven Project Object Model file declaring Java runtime, framework versions, and dependencies",
+  "components/": "React component library partitioned by feature domain and atomic UI elements",
+  "lib/": "Client utility libraries, HTTP API clients, and network interceptors",
+  "public/": "Static public assets served directly by the web server",
+  "package.json": "Frontend project manifest declaring scripts, dependencies, and engine targets",
+  "docker-compose.yml": "Docker Compose definition orchestrating multi-container service stack"
+}

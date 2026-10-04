@@ -49,17 +49,16 @@ This involves creating a nested directory structure within the `.agents/` folder
 
 All paths MUST be absolute, anchored to the project root, to prevent execution context errors. 
 
-We MUST create empty stub files for `plan.md` and `task.md` so that S3 has a valid target to write to.
+We MUST create empty stub files for `plan.md`, `task.md`, `context.md`, `mode.txt`, and initialize `CHECKLIST.md` from `resources/checklist-template.md`.
 
-The agent MUST verify that these commands succeed without throwing permission errors.
+The agent MAY run the automated initialization script `commands/init-session.ps1` directly, or execute the cross-platform shell commands below.
 
 Precondition: The `[SHA]` has been generated and the project root path is known.
 
-1. Execute a shell command to create the root session directory: `mkdir -p [PROJECT_ROOT]/.agents/session-[SHA]/`.
-   - Expected Output: The root session folder exists.
-2. Execute shell commands to create the subdirectories: `mkdir -p [PROJECT_ROOT]/.agents/session-[SHA]/audit/bin/`, `mkdir -p [PROJECT_ROOT]/.agents/session-[SHA]/code-review/submit/`, and `mkdir -p [PROJECT_ROOT]/.agents/session-[SHA]/code-review/review/`.
-   - Expected Output: All nested directories exist.
-3. Execute shell commands to create the stub files: `touch [PROJECT_ROOT]/.agents/session-[SHA]/plan.md` and `touch [PROJECT_ROOT]/.agents/session-[SHA]/task.md`.
-   - Expected Output: The empty stub files are created in the session root.
+1. **Option A (Automated)**: Run `pwsh -File [PROJECT_ROOT]/commands/init-session.ps1` or `powershell -ExecutionPolicy Bypass -File [PROJECT_ROOT]/commands/init-session.ps1`.
+2. **Option B (Manual)**:
+   - Create directories: `mkdir -p [PROJECT_ROOT]/.agents/session-[SHA]/audit/bin/`, `.agents/session-[SHA]/code-review/submit/`, `.agents/session-[SHA]/code-review/review/`.
+   - Create stubs using `write_to_file` or `New-Item` (PowerShell) / `touch` (Bash) for `plan.md`, `task.md`, `context.md`, `mode.txt`.
+   - Copy `resources/checklist-template.md` to `.agents/session-[SHA]/CHECKLIST.md` and replace `[SHA]` with the actual session SHA.
 
-Postcondition: The complete directory tree is present on the filesystem, ready for S2 and S3 operations.
+Postcondition: The complete directory tree and `CHECKLIST.md` are present on the filesystem, ready for S2 and S3 operations.

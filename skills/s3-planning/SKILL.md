@@ -1,5 +1,5 @@
 ---
-name: "S3 Planning"
+name: s3-planning
 description: "Executes the rigorous planning phase, reading audit reports and user inputs to produce prioritized task lists and implementation plans."
 ---
 
@@ -16,16 +16,17 @@ Failure to follow the correct modal protocol will result in excessive quota usag
 Without this central intelligence hub, subsequent execution phases would operate blindly and chaotically.
 The agent MUST treat the generation of the `plan.md` and `task.md` files as its absolute highest priority before any code generation is allowed to occur.
 
-## 2. Context Ingestion Requirements
-Before generating any plans, the agent MUST consume all available context to form a complete mental model of the project's current state. 
-Attempting to write a plan based solely on a single user prompt guarantees the introduction of regressions and the violation of established architectural patterns.
-The S2 audit exists precisely to provide this context, and ignoring it renders the previous phase useless.
-The agent MUST read the required files completely into memory before opening the `plan.md` or `task.md` files for writing.
-If any of these foundational documents are missing, the agent MUST halt execution and inform the user of the critical failure.
-The agent MUST read and analyze the following sources of truth.
-1. **The Audit Report**: The agent MUST read `.agents/session-[SHA]/audit/audit.md` to understand the existing technical debt, security vulnerabilities, and stack pack violations.
-2. **The Project PRD**: The agent MUST read `GEMINI.md`, paying specific attention to the "Open Features" section to align the plan with the long-term project roadmap.
-3. **The User Request**: The agent MUST analyze the user's explicit prompt or bug report that initiated the current session.
+## 2. Mandatory Files to Read at this Step
+Before generating any plans, the agent MUST consume all available context and templates:
+1. **Templates & Rubrics**:
+   - `resources/plan-template.md` (Mandatory schema for `.agents/session-[SHA]/plan.md`)
+   - `resources/task-template.md` (Mandatory schema for `.agents/session-[SHA]/task.md` with architectural type tags)
+   - `skills/s3-planning/resources/priority-rubric.md` (Mathematical scoring formula: `Severity × Complexity × Dependencies`)
+2. **Context & Findings**:
+   - `GEMINI.md` (PRD Section 2 Architecture, Section 3 Stack, and Section 5 Open Features)
+   - `.agents/session-[SHA]/context.md` (Ingested stack packs and operating mode)
+   - `.agents/session-[SHA]/audit.md` (or `.agents/session-[SHA]/audit/audit.md`, if S2 was not skipped)
+   - The user's explicit task description and requirements
 
 ## 3. Modal Execution Protocols
 The exact behavior of the S3 phase is strictly governed by the operating mode established during the S1 Orchestration phase. 
@@ -43,8 +44,11 @@ When operating in Standard or Duolithic mode, the agent MUST execute the full, r
 This protocol guarantees that complex tasks are broken down into atomic units and scored objectively to prevent scope creep and priority inversion.
 The agent MUST NOT skip the rubric calculation step, as it is the sole mechanism for enforcing disciplined task ordering.
 The agent MUST explicitly generate two separate artifacts and write them to the session directory.
-1. **The Implementation Plan**: The agent MUST generate `.agents/session-[SHA]/plan.md`, detailing the specific code changes required to address the user request and the critical audit findings.
-2. **The Prioritized Task List**: The agent MUST generate `.agents/session-[SHA]/task.md` by running every identified task through the `resources/priority-rubric.md` scoring formula (`Severity × Complexity × Dependencies`) and sorting the output sequentially.
+1. **The Implementation Plan**: The agent MUST generate `.agents/session-[SHA]/plan.md` (read `resources/plan-template.md`), detailing the specific code changes required to address the user request and critical audit findings.
+   - **Antigravity Rule**: NEVER create `implementation_plan.md` as a UI artifact. Write the plan exclusively to `.agents/session-[SHA]/plan.md`.
+2. **The Prioritized Task List**: The agent MUST generate `.agents/session-[SHA]/task.md` (read `resources/task-template.md`) by running every identified task through the `skills/s3-planning/resources/priority-rubric.md` scoring formula (`Severity × Complexity × Dependencies`) and sorting the output sequentially.
+   - **Mandatory Type Tags**: Every task MUST include an architectural type tag: `[frontend]`, `[backend]`, `[database]`, `[infra]`, or `[fullstack]` (or Minecraft domain tag: `[gameplay]`, `[mod-compat]`, `[mapping]`, `[architecture]`).
+3. **Expand CHECKLIST.md**: The agent MUST expand the task execution section of `.agents/session-[SHA]/CHECKLIST.md` with discrete S6→S7→S8 tracking rows for each planned task.
 
 ### 3.2 Fast Mode Protocol
 When the session is explicitly marked as `/fast mode`, the agent MUST bypass the rigorous multi-file planning process to prioritize speed for low-risk changes. 

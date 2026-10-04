@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AntiPatternSpecification",
+  "description": "Schema enforcing the required three-part anatomy of a critical project-specific anti-pattern: Violation, Consequence, and Mitigation.",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "domain",
+    "severity",
+    "violation",
+    "consequence",
+    "mitigation"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 20,
+      "description": "Sequential index of the anti-pattern (1 through 12)."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 100,
+      "description": "Descriptive, domain-specific name of the prohibited pattern."
+    },
+    "domain": {
+      "type": "string",
+      "enum": ["SECURITY", "PROTOCOL", "DATABASE", "GATEWAY", "STATE_MANAGEMENT", "PERFORMANCE", "CONFIGURATION"],
+      "description": "System domain affected by the anti-pattern."
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["CRITICAL", "HIGH"],
+      "description": "Severity classification. Must be CRITICAL or HIGH."
+    },
+    "violation": {
+      "type": "string",
+      "minLength": 30,
+      "description": "Exact description of the prohibited code construct, bad practice, or protocol deviation."
+    },
+    "consequence": {
+      "type": "string",
+      "minLength": 30,
+      "description": "Direct, concrete failure mode, security breach, rate-limit ban, or data corruption resulting from the violation."
+    },
+    "mitigation": {
+      "type": "string",
+      "minLength": 30,
+      "description": "Mandatory architectural rule, code pattern, or automated gate required to prevent the violation."
+    }
+  }
+}

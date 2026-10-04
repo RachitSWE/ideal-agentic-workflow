@@ -23,6 +23,27 @@ Without executing this skill first, the rest of the workflow will fail due to mi
 
 We MUST run this skill successfully before opening any source code files.
 
+---
+
+## Mandatory Files to Read at this Step
+
+Before and during execution of S1, the agent MUST explicitly read:
+1. **Primary Project Specification & Rules**:
+   - `GEMINI.md` (Read in full before opening any source code file)
+   - `rules/AGENTS.md` (Global Senior Developer Invariants AP-001 through AP-008)
+2. **Session Initialization Resources & Automation**:
+   - `skills/s1-orchestrator/resources/session-init.md` (Timestamp SHA generation and directory layout)
+   - `resources/checklist-template.md` (Master execution checklist schema for `.agents/session-[SHA]/CHECKLIST.md`)
+   - `commands/init-session.ps1` (Cross-platform PowerShell scaffolding script)
+3. **Mode Resources (Read corresponding mode detected)**:
+   - `skills/s1-orchestrator/resources/fast-mode.md` (Single-task, low-overhead mode rules)
+   - `skills/s1-orchestrator/resources/trivial-mode.md` (Docs-only bypass rules)
+   - `skills/s1-orchestrator/resources/duolithic-mode.md` (Dual-conversation R-Agent delegation rules)
+4. **Stack Composition**:
+   - `resources/stacks/_stack-composer.md` (Mapping detected tech stack to active stack packs)
+
+---
+
 ## Senior Developer Mindset
 
 Before executing any other action in this skill, the agent MUST adopt the Senior Developer Mindset. 
@@ -99,11 +120,11 @@ We MUST follow the specific SHA generation algorithm provided in the resources.
 
 Precondition: Context ingestion is complete and no past session is being resumed.
 
-1. Read the `resources/session-init.md` file to obtain the SHA generation algorithm.
+1. Read the `skills/s1-orchestrator/resources/session-init.md` file to obtain the SHA generation algorithm.
    - Expected Output: The agent understands the timestamp-based SHA1 logic.
 2. Execute the generation algorithm to produce a 6-character lowercase hex string.
    - Expected Output: A unique string like `e3f9a2` is generated.
-3. Run the directory creation commands specified in `resources/session-init.md`.
+3. Run the directory creation commands specified in `skills/s1-orchestrator/resources/session-init.md`.
    - Expected Output: The `.agents/session-[SHA]/` directory tree is created with all required subdirectories and stub files.
 
 Postcondition: A pristine, isolated workspace is ready for the current session's artifacts.
@@ -126,7 +147,7 @@ Precondition: The session directory tree has been initialized.
    - Expected Output: The requested mode (or the default Standard Mode) is identified.
 2. Write the identified mode to `.agents/session-[SHA]/mode.txt`.
    - Expected Output: A file containing the mode string (e.g., "fast") exists.
-3. Depending on the detected mode, read the corresponding resource file (`resources/duolithic-mode.md`, `resources/fast-mode.md`, or `resources/trivial-mode.md`).
+3. Depending on the detected mode, read the corresponding resource file (`skills/s1-orchestrator/resources/duolithic-mode.md`, `skills/s1-orchestrator/resources/fast-mode.md`, or `skills/s1-orchestrator/resources/trivial-mode.md`).
    - Expected Output: The agent explicitly loads and understands the specific protocol rules for the requested mode.
 
 Postcondition: The operating mode is permanently recorded and the agent knows which protocol to follow.
@@ -145,10 +166,12 @@ The `context.md` file serves as the communication medium for this state.
 
 Precondition: The technology stack was identified during Context Ingestion and the session directory exists.
 
-1. Create a `.agents/session-[SHA]/context.md` file.
+1. Read `resources/stacks/_stack-composer.md` to map detected technologies to their respective stack packs.
+   - Expected Output: The agent assembles the list of applicable stack packs from `resources/stacks/`.
+2. Create a `.agents/session-[SHA]/context.md` file following the schema in `_stack-composer.md`.
    - Expected Output: A new Markdown file is created in the session root.
-2. Write the detected stack keywords into this file (e.g., `Stack: web-nextjs-turborepo`).
-   - Expected Output: The file contains the structured stack data.
+3. Write the detected stack keywords and active stack pack paths into this file.
+   - Expected Output: The file contains the structured stack data for downstream auditors and coders.
 
 Postcondition: The project's stack context is persisted for use by S2 auditors.
 

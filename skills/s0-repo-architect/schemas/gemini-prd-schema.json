@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GeminiPrdDocument",
+  "description": "JSON Schema specification defining the structure, metadata, section invariants, and constraints for an authoritative GEMINI.md PRD single source of truth.",
+  "type": "object",
+  "required": [
+    "documentTitle",
+    "version",
+    "tableOfContents",
+    "section1_projectIdentity",
+    "section2_workflowArchitecture",
+    "section3_technologyStack",
+    "section4_directoryStructure",
+    "section5_openFeatures",
+    "section6_antiPatterns"
+  ],
+  "properties": {
+    "documentTitle": {
+      "type": "string",
+      "pattern": "^PRD:\\s+.+$",
+      "description": "H1 document header declaring the product or system name."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version of the PRD document."
+    },
+    "author": {
+      "type": "string",
+      "description": "Author name or architecture guild attribution."
+    },
+    "tableOfContents": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "string"
+      },
+      "description": "Six anchored table of contents links corresponding to the 6 mandatory sections."
+    },
+    "section1_projectIdentity": {
+      "type": "object",
+      "required": ["description", "corePrinciples"],
+      "properties": {
+        "description": {
+          "type": "string",
+          "minLength": 50,
+          "description": "High-level mission statement and system identity."
+        },
+        "corePrinciples": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "string"
+          },
+          "description": "Core architectural principles and operational invariants."
+        }
+      }
+    },
+    "section2_workflowArchitecture": {
+      "type": "object",
+      "required": ["workflows"],
+      "properties": {
+        "workflows": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": ["workflowName", "phases"],
+            "properties": {
+              "workflowName": { "type": "string" },
+              "phases": {
+                "type": "array",
+                "minItems": 2,
+                "items": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "section3_technologyStack": {
+      "type": "object",
+      "required": ["subsystems"],
+      "properties": {
+        "subsystems": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": ["subsystemName", "technologies"],
+            "properties": {
+              "subsystemName": { "type": "string" },
+              "technologies": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "section4_directoryStructure": {
+      "type": "object",
+      "required": ["maxDepthTreeText", "totalTrackedFiles", "hasExplainers"],
+      "properties": {
+        "maxDepthTreeText": {
+          "type": "string",
+          "description": "Complete ASCII directory tree generated via git ls-files."
+        },
+        "totalTrackedFiles": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "hasExplainers": {
+          "type": "boolean",
+          "const": true,
+          "description": "Every file and directory must have an aligned one-line explainer."
+        }
+      }
+    },
+    "section5_openFeatures": {
+      "type": "object",
+      "required": ["features"],
+      "properties": {
+        "features": {
+          "type": "array",
+          "description": "Tracked features or empty backlog notation."
+        }
+      }
+    },
+    "section6_antiPatterns": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 15,
+      "items": {
+        "$ref": "#/$defs/AntiPatternItem"
+      },
+      "description": "10-12 critical project-specific anti-patterns with 3-part anatomy."
+    }
+  },
+  "$defs": {
+    "AntiPatternItem": {
+      "type": "object",
+      "required": ["title", "violation", "consequence", "mitigation"],
+      "properties": {
+        "title": { "type": "string" },
+        "violation": { "type": "string", "minLength": 20 },
+        "consequence": { "type": "string", "minLength": 20 },
+        "mitigation": { "type": "string", "minLength": 20 }
+      }
+    }
+  }
+}

@@ -1,5 +1,5 @@
 ---
-name: "S4 Plan Review"
+name: s4-plan-review
 description: "Executes the critical quality gate, spawning specialized subagents to evaluate the implementation plan against architectural constraints and audit findings."
 ---
 
@@ -15,7 +15,24 @@ The orchestrating agent MUST prepare the exact inputs required by the subagents 
 Failure to properly orchestrate this review will result in the deployment of brittle, non-compliant code that degrades the repository's health.
 The S4 phase explicitly determines whether the workflow advances to coding or loops back to planning for necessary revisions.
 
-## 2. Modal Execution Protocols
+---
+
+## 2. Mandatory Files to Read at this Step
+
+Before and during execution of S4, the agent MUST explicitly read:
+1. **Plan Review Persona & Guidelines**:
+   - `agents/plan-critic.md` (Persona definition for spawning plan-critic subagents)
+   - `skills/s4-plan-review/resources/plan-review-guide.md` (Checklist, scoring criteria, and consensus gates)
+2. **Review Submission & Output Templates**:
+   - `resources/submit-template.md` (Schema for writing `.agents/session-[SHA]/code-review/submit/submit(0).md`)
+   - `resources/review-template.md` (Schema for reviewer verdicts in `.agents/session-[SHA]/code-review/review/review(n).md`)
+3. **Active Plan Artifacts**:
+   - `.agents/session-[SHA]/plan.md` (The implementation plan under review)
+   - `.agents/session-[SHA]/task.md` (The prioritized task list)
+
+---
+
+## 3. Modal Execution Protocols
 The exact behavior of the S4 phase is strictly governed by the operating mode established during the S1 Orchestration phase. 
 The agent MUST evaluate the current mode from the `.agents/session-[SHA]/mode.txt` file (or its internal state) and execute the corresponding protocol branch.
 Applying the wrong protocol wastes time spawning unnecessary subagents or dangerously bypasses the review for complex, high-risk changes.
@@ -25,12 +42,12 @@ The agent MUST strictly adhere to the mutually exclusive branches of logic defin
 The agent MUST NOT attempt to blend these instructions; a session is either fully reviewed or explicitly bypassed based on the mode.
 If the operating mode is unclear, the agent MUST default to the Standard mode protocol to guarantee that safety is never compromised.
 
-### 2.1 Fast and Trivial Mode Bypass
-When the session is explicitly marked as `/fast mode` or `/trivial`, the agent MUST completely bypass the entire S4 Plan Review phase. 
-These modes are designed for low-risk, tightly scoped changes where the developer's initial direction does not require secondary validation.
-Spawning plan-critic subagents for a trivial documentation fix or a single-line bug patch constitutes a massive waste of AI quota and wall-clock time.
+### 2.1 Fast, Trivial, and Skip List Bypass
+When the session is explicitly marked as `/fast mode`, `/trivial`, or when the user's session skip list explicitly contains "S4", the agent MUST completely bypass the entire S4 Plan Review phase. 
+These modes and overrides are designed for low-risk, tightly scoped changes or direct developer overrides where the initial direction does not require secondary validation.
+Spawning plan-critic subagents when bypassed constitutes an unnecessary expenditure of AI quota and wall-clock time.
 The agent MUST NOT prepare a `submit(n).md` file or spawn any reviewers under these specific protocols.
-The agent MUST immediately advance the workflow directly to the S6 Coding phase, trusting the inline plan generated during S3.
+The agent MUST immediately advance the workflow directly to the S6 Coding phase, trusting the plan generated during S3.
 
 ### 2.2 Standard Mode Protocol
 When operating in Standard Mode, the agent MUST execute the native, multi-agent review process within the current conversation context. 
