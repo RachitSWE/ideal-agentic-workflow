@@ -14,7 +14,7 @@ The orchestrating agent MUST update this file incrementally as each step progres
   - **Type Tag Options**: `[frontend]` | `[backend]` | `[database]` | `[infra]` | `[fullstack]` (or `[gameplay]` | `[mod-compat]` for Minecraft)
   - **Priority Score**: `[Severity × Complexity × Dependencies]`
   - **Scope**: [Exact files to touch]
-  - **Test Target**: [Verification command or test file to run in S7]
+  - **Test Target**: [Verification command or test file to run in S7. NOTE: For `[frontend]` tasks, `tsc --noEmit` alone is BANNED; must specify component render/mount or interaction test (e.g. `npx vitest run src/components/Form.test.tsx`) asserting DOM mount and API client call]
 
 - `[ ]` **TASK-2** `[Type Tag]` [Task Title]
   - **Priority Score**: `[Score]`

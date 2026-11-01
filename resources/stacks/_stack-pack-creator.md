@@ -28,7 +28,7 @@ Every stack pack MUST contain exactly five sections, in the exact order listed b
 
 ## 5. Review and Finalization
 The newly drafted stack pack must be reviewed and persisted so it can be utilized in future sessions. This final step guarantees that only high-quality, verified constraints are added to the plugin's knowledge base.
-1. Write the drafted content to `resources/stacks/[stack-name].md`.
+1. Write the drafted content to its canonical folder (`resources/stacks/database/`, `resources/stacks/backend/`, `resources/stacks/frontend/`, or `resources/stacks/minecraft/`).
 2. Present the drafted stack pack to the user for review.
 3. Apply any corrections the user requests.
-- **Postcondition**: The `resources/stacks/` directory contains the new `[stack-name].md` file formatted with the 5 mandatory sections, and the persona bank is updated. Future sessions will load this pack automatically when the stack is detected.
+- **Postcondition**: The `resources/stacks/` canonical directory contains the new `[stack-name].md` file formatted with the 5 mandatory sections, and the persona bank and `resources/stacks/_stack-composer.md` are updated. Future sessions will load this pack automatically when the stack is detected.

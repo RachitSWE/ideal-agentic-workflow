@@ -49,3 +49,19 @@ The reviewer MUST actively hunt for the following conceptual flaws.
 - **Simulation Code**: Verify that the plan strictly prohibits the generation of mock data, placeholders, or non-production simulation logic.
 - **Verbose Comments**: Verify that the plan does not encourage writing excessive, narrative comments inside the source files.
 - **Compiler Appeasement**: Verify that the plan does not propose suppressing warnings or bypassing type safety solely to force a successful build.
+
+---
+
+## 3. Plan Review Circuit-Breaker Standard (2-Round Maximum)
+
+Plan review rejection cycles are strictly capped at two (2) rounds:
+
+1. **Round 1 (Initial Plan Review)**:
+   - Reviewer evaluates `submit(0).md`.
+   - If architectural gaps, missing abstractions, or anti-patterns exist, emit `CHANGES_REQUESTED` with explicit line-level findings and remediation steps.
+2. **Round 2 (Re-evaluation)**:
+   - Reviewer evaluates revised plan in `submit(1).md`.
+   - If verified, emit `LGTM`.
+   - **Circuit Breaker Rule**: If criticisms remain unresolved on Round 2, the reviewer MUST NOT issue another open-ended rejection. The reviewer MUST EITHER:
+     - **Option A (Exact Revision Diff)**: Provide the exact drop-in revision diff for `plan.md` and `task.md` to achieve immediate `LGTM`.
+     - **Option B (Operator Escalation)**: Set status to `CHANGES_REQUESTED (CIRCUIT_BREAKER_TRIPPED)` and escalate directly to the human operator for explicit architectural guidance.

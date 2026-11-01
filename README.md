@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![Version](https://img.shields.io/badge/version-1.3.0-blue.svg)](plugin.json)
+[![Version](https://img.shields.io/badge/version-1.3.1-blue.svg)](plugin.json)
 [![Author](https://img.shields.io/badge/author-RachitSWE-green.svg)](https://github.com/RachitSWE)
 [![Platform](https://img.shields.io/badge/platform-Google%20Antigravity-orange.svg)](https://antigravity.google)
 [![Verification Suite](https://img.shields.io/badge/verification-7%2F7%20passing-brightgreen.svg)](scripts/verify-file-citations.js)
@@ -175,21 +175,25 @@ Each supported ecosystem provides paired stack pack specifications ([`resources/
 
 | Technology Stack | Stack Pack | Enforceable Rule Charter |
 | :--- | :--- | :--- |
-| **PostgreSQL + Hibernate + Flyway** | [`database-postgres-hibernate-flyway.md`](resources/stacks/database-postgres-hibernate-flyway.md) | [`rules-database-postgres-hibernate-flyway.md`](rules/rules-database-postgres-hibernate-flyway.md) |
-| **Next.js & Turborepo** | [`web-nextjs-turborepo.md`](resources/stacks/web-nextjs-turborepo.md) | [`rules-web-nextjs-turborepo.md`](rules/rules-web-nextjs-turborepo.md) |
-| **Java Spring Boot** | [`web-backend-java-spring.md`](resources/stacks/web-backend-java-spring.md) | [`rules-web-backend-java-spring.md`](rules/rules-web-backend-java-spring.md) |
-| **Python AI & RAG Backend** | [`web-backend-python-ai.md`](resources/stacks/web-backend-python-ai.md) | [`rules-web-backend-python-ai.md`](rules/rules-web-backend-python-ai.md) |
-| **Rust Systems & Backend** | [`web-backend-rust.md`](resources/stacks/web-backend-rust.md) | [`rules-web-backend-rust.md`](rules/rules-web-backend-rust.md) |
-| **PostgreSQL + Prisma** | [`database-postgres-prisma.md`](resources/stacks/database-postgres-prisma.md) | [`rules-database-postgres-prisma.md`](rules/rules-database-postgres-prisma.md) |
-| **MongoDB + Redis** | [`database-mongo-redis.md`](resources/stacks/database-mongo-redis.md) | [`rules-database-mongo-redis.md`](rules/rules-database-mongo-redis.md) |
-| **Minecraft Fabric** | [`mc-fabric.md`](resources/stacks/mc-fabric.md) | [`rules-mc-fabric.md`](rules/rules-mc-fabric.md) |
-| **Minecraft NeoForge** | [`mc-neoforge.md`](resources/stacks/mc-neoforge.md) | [`rules-mc-neoforge.md`](rules/rules-mc-neoforge.md) |
+| **MongoDB** | [`database/mongodb.md`](resources/stacks/database/mongodb.md) | [`rules-database-mongodb.md`](rules/rules-database-mongodb.md) |
+| **Redis** | [`database/redis.md`](resources/stacks/database/redis.md) | [`rules-database-redis.md`](rules/rules-database-redis.md) |
+| **PostgreSQL** | [`database/postgresql.md`](resources/stacks/database/postgresql.md) | [`rules-database-postgresql.md`](rules/rules-database-postgresql.md) |
+| **Java Backend (Spring Boot)** | [`backend/backend-java.md`](resources/stacks/backend/backend-java.md) | [`rules-backend-java.md`](rules/rules-backend-java.md) |
+| **Java Databases (JPA, Mongo, Redis)** | [`backend/java-databases.md`](resources/stacks/backend/java-databases.md) | [`rules-backend-java-databases.md`](rules/rules-backend-java-databases.md) |
+| **Python Backend (FastAPI)** | [`backend/backend-python.md`](resources/stacks/backend/backend-python.md) | [`rules-backend-python.md`](rules/rules-backend-python.md) |
+| **Python Databases (SQLAlchemy, Motor)** | [`backend/python-databases.md`](resources/stacks/backend/python-databases.md) | [`rules-backend-python-databases.md`](rules/rules-backend-python-databases.md) |
+| **Rust Backend (Axum & Tokio)** | [`backend/backend-rust.md`](resources/stacks/backend/backend-rust.md) | [`rules-backend-rust.md`](rules/rules-backend-rust.md) |
+| **Rust Databases (SQLx, Mongo, Redis)** | [`backend/rust-databases.md`](resources/stacks/backend/rust-databases.md) | [`rules-backend-rust-databases.md`](rules/rules-backend-rust-databases.md) |
+| **Next.js & React 19** | [`frontend/nextjs.md`](resources/stacks/frontend/nextjs.md) | [`rules-frontend-nextjs.md`](rules/rules-frontend-nextjs.md) |
+| **Angular 20/21 LTS (Signals & Zoneless)** | [`frontend/angular.md`](resources/stacks/frontend/angular.md) | [`rules-frontend-angular.md`](rules/rules-frontend-angular.md) |
+| **Minecraft Fabric** | [`minecraft/mc-fabric.md`](resources/stacks/minecraft/mc-fabric.md) | [`rules-minecraft-fabric.md`](rules/rules-minecraft-fabric.md) |
+| **Minecraft NeoForge / Forge** | [`minecraft/mc-forge.md`](resources/stacks/minecraft/mc-forge.md) | [`rules-minecraft-forge.md`](rules/rules-minecraft-forge.md) |
 | **Stack Composer Engine** | [`_stack-composer.md`](resources/stacks/_stack-composer.md) | [`AGENTS.md`](rules/AGENTS.md) |
 | **Stack Pack Extensibility** | [`_stack-pack-creator.md`](resources/stacks/_stack-pack-creator.md) | [`AGENTS.md`](rules/AGENTS.md) |
 
 ---
 
-## 🛡️ Anti-Patterns Guarded (AP-001 – AP-008)
+## 🛡️ Anti-Patterns Guarded (AP-001 – AP-010)
 
 All agents, auditors, and reviewers actively detect and reject violations of the core invariants in [`rules/AGENTS.md`](rules/AGENTS.md) and [`skills/s6-coding/resources/anti-patterns.md`](skills/s6-coding/resources/anti-patterns.md):
 
@@ -197,10 +201,12 @@ All agents, auditors, and reviewers actively detect and reject violations of the
 - **`AP-002` · Zero Conversational Comments**: Absolute ban on narrative comments (`// Added as per user instructions`, `// Modified to fix null pointer`).
 - **`AP-003` · Zero Lingering Stubs**: Absolute ban on `TODO`, `FIXME`, `pass`, or `throw new UnsupportedOperationException()`.
 - **`AP-004` · Zero Compiler Appeasement**: Absolute ban on disabling compiler checks (`any`, `@ts-ignore`, `# noqa`, empty `catch (Exception e) {}`).
-- **`AP-005` · Zero Bulk Staging**: Absolute ban on `git add .` or `git add -A`. Staging MUST be performed surgically per-file (`git add <file>`).
+- **`AP-005` · Scope-Aware Atomic Staging**: Ban on blind `git add .` or `git add -A`. Mode A: surgical per-file staging (~50-150 LOC); Mode B: directory-scoped staging for cohesive scaffolding (>= 15 files) with structured manifest.
 - **`AP-006` · Zero Context Exhaustion**: Absolute ban on dumping monolithic source files into prompts; targeted diffs and line ranges only.
 - **`AP-007` · Zero State Leakage**: All session state, stubs, and reviews are quarantined strictly inside `.agents/session-[SHA]/`.
 - **`AP-008` · Zero Destructive Document Mutations**: Strict append-only, non-destructive editing protocol for `GEMINI.md` and user documentation.
+- **`AP-009` · Phase-Transition Caching**: Mandatory `view_file` execution ONCE per phase transition before action tools; context is cached in working memory throughout the phase, eliminating turn-by-turn re-reading.
+- **`AP-010` · Zero Self-Review Fabrication**: Absolute ban on the main orchestrating agent authoring `review(n).md` or `audit(n).md` files. Reviews and audits MUST be performed by independent subagents.
 
 ---
 
@@ -240,8 +246,8 @@ node scripts/verify-file-citations.js
 ### Verification Checks Enforced:
 1. **Zero Broken Citations**: Validates that all relative file paths cited physically exist on disk (125+ unique paths verified).
 2. **Subagent Coverage**: Validates that all 48 subagent definitions in `agents/` are cited and accessible.
-3. **Rule Coverage**: Validates that all 10 invariant rules in `rules/` are cited.
-4. **Stack Pack Coverage**: Validates that all 11 stack packs in `resources/stacks/` are cited.
+3. **Rule Coverage**: Validates that all 14 invariant rules in `rules/` are cited.
+4. **Stack Pack Coverage**: Validates that all 15 stack packs and utilities in `resources/stacks/` are cited.
 5. **Command Script Coverage**: Validates that all 7 PowerShell automation scripts in `commands/` are cited.
 6. **Auxiliary Resources**: Validates that all 28 skill-local schemas, scripts, and templates are cited.
 7. **Token Efficiency**: Validates that invocation prompts contain 0 heavy ASCII box drawing characters.

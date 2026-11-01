@@ -40,3 +40,37 @@ For fullstack projects, the reviewer MUST prioritize verifying data sanitization
 For Minecraft projects, the reviewer MUST prioritize verifying tick-rate efficiency, memory management, and proper mixin implementation without conflicts.
 The reviewer MUST ensure that the implementation is not just syntactically correct, but contextually robust for the target environment.
 The reviewer MUST reject the code if it fails to account for these domain-specific vulnerabilities.
+
+### 2.4 Platform Domain Verification Tables
+
+Reviewers MUST cross-reference changes against the following mandatory platform domain tables:
+
+#### Discord & Gateway Integration Domain Checks
+| Subsystem / Rule | Requirement & Detection Signal | Severity if Violated |
+| :--- | :--- | :--- |
+| **3,000ms Interaction SLA** | All slash commands, buttons, and select menu handlers MUST call `deferReply()` / `deferEdit()` before database lookups, external HTTP calls, or async processing. | **CRITICAL** (`CHANGES_REQUESTED`) |
+| **DM Context Mentions** | DMs have NO guild context. Role snowflakes `<@&role_id>` render as `@unknown-role`. Direct message templates MUST use plain text `{roleName}`. | **HIGH** (`CHANGES_REQUESTED`) |
+| **Component V2 Nesting** | Interactive components (buttons, selects) MUST reside inside valid `ActionRow` container components and cannot escape container bounds. | **HIGH** (`CHANGES_REQUESTED`) |
+
+#### Next.js & Frontend Architecture Domain Checks
+| Subsystem / Rule | Requirement & Detection Signal | Severity if Violated |
+| :--- | :--- | :--- |
+| **Single Routing Root** | Root `app/` and `src/app/` MUST NOT coexist. Root `app/` shadows `src/app/`, creating silent collision and rendering defects. Conflicting directories must be eliminated. | **CRITICAL** (`CHANGES_REQUESTED`) |
+| **No Solo Typecheck** | `npx tsc --noEmit` validates types only, NOT runtime rendering. Every UI component task MUST include automated render/mount tests (React Testing Library / Vitest). | **HIGH** (`CHANGES_REQUESTED`) |
+| **No `localStorage` Fallback** | Production API clients (`lib/api.ts`) MUST NOT catch HTTP errors and silently return `localStorage` dummy payloads. Violates AP-001. Errors must propagate. | **CRITICAL** (`CHANGES_REQUESTED`) |
+
+---
+
+## 3. Two-Round Review Circuit-Breaker Standard
+
+To prevent infinite rejection cycles between orchestrators and reviewers, the review protocol enforces a strict **2-Round Circuit Breaker**:
+
+1. **Round 1 (Initial Review)**:
+   - Reviewer evaluates `submit(0).md`.
+   - If defects are found, emit `CHANGES_REQUESTED` with explicit line-level findings and actionable remediation instructions.
+2. **Round 2 (Re-evaluation)**:
+   - Reviewer evaluates resubmitted fixes in `submit(1).md`.
+   - If the implementation is verified, emit `LGTM`.
+   - **Circuit Breaker Rule**: If unresolved defects remain on Round 2, the reviewer MUST NOT issue another open-ended rejection. The reviewer MUST EITHER:
+     - **Option A (Exact Patch Diff)**: Provide the exact drop-in unified patch diff necessary for the author to achieve immediate `LGTM`.
+     - **Option B (Operator Escalation)**: If an irreconcilable architectural impasse exists, set status to `CHANGES_REQUESTED (CIRCUIT_BREAKER_TRIPPED)` and escalate directly to the human operator for explicit guidance.

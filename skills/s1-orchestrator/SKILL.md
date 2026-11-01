@@ -27,7 +27,9 @@ We MUST run this skill successfully before opening any source code files.
 
 ## Mandatory Files to Read at this Step
 
-Before and during execution of S1, the agent MUST explicitly read:
+### Phase Step 0: Mandatory `view_file` Execution Gate
+Before running initialization scripts or scaffolding directories, the agent MUST explicitly call `view_file` on EVERY file listed below. Taking action without calling `view_file` violates **AP-009 (Unread Context Execution)**.
+
 1. **Primary Project Specification & Rules**:
    - `GEMINI.md` (Read in full before opening any source code file)
    - `rules/AGENTS.md` (Global Senior Developer Invariants AP-001 through AP-008)

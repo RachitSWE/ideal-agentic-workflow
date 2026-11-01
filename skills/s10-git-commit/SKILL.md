@@ -19,7 +19,9 @@ The S10 phase explicitly transitions the workflow from active development into d
 
 ## 2. Mandatory Files to Read at this Step
 
-Before staging files or creating git commits, the agent MUST explicitly read:
+### Phase Step 0: Mandatory `view_file` Execution Gate
+Before staging any files, running diff measures, or executing `git commit`, the orchestrating agent MUST explicitly call `view_file` on EVERY file listed below. Committing without verifying commit guidelines and diff thresholds violates **AP-009 (Unread Context Execution)**.
+
 1. **Commit Formatting & Sizing Guidelines**:
    - `skills/s10-git-commit/resources/commit-examples.md` (Conventional Commit type taxonomy, subjects, and scopes)
    - `skills/s10-git-commit/resources/breaking-change-guide.md` (Formatting breaking API footers and migrations)
@@ -45,9 +47,19 @@ The agent MUST "never split atomic units". If a commit exceeds 150 insertions, t
 If the change is truly atomic, the commit body MUST contain "one sentence explaining why this is one atomic unit". If not, the agent MUST follow `skills/s10-git-commit/resources/commit-split-guide.md` to stage per-file into split commits.
 For Fast Mode, the agent MUST apply the override: "No size target — commit what the fix requires."
 For the Trivial Protocol, the agent MUST apply the override: "Single commit with type `docs` or `chore`."
-Under NO circumstances may the agent use `git add .`; staging MUST always be performed surgically per-file (`git add <file>` or `commands/stage-commit.ps1`).
 
-### 3.1 Commit Formatting Protocol
+### 3.1 Dual-Mode Staging Standard (AP-005)
+Under NO circumstances may the agent execute blind bulk staging (`git add .` or `git add -A`). Staging MUST follow one of two standardized AP-005 modes:
+1. **Mode A: Surgical Mode (Default)**:
+   - Used for standard tasks, bug fixes, and atomic increments.
+   - Files are staged individually and explicitly (`git add path/to/file.ts` or `pwsh -File commands/stage-commit.ps1 -Files @(...)`).
+   - Sizing target is ~50–150 insertions per commit.
+2. **Mode B: Scaffold / Refactor Mode**:
+   - Permitted when generating $\ge 15$ new cohesive files or performing large initial architectural scaffolding.
+   - Directory-scoped staging is allowed (e.g., `git add src/components/common/` or `pwsh -File commands/stage-commit.ps1 -Files @("src/components/common/") -Scaffold`).
+   - The commit body MUST contain a structured manifest itemizing the scaffolded modules/components.
+
+### 3.2 Commit Formatting Protocol
 Before finalizing the git commit message, the agent MUST explicitly instruct itself to read `skills/s10-git-commit/resources/commit-examples.md` and `skills/s10-git-commit/resources/breaking-change-guide.md`. 
 The agent MUST study these resources to ensure its drafted message exactly matches the project's rigid stylistic requirements.
 The agent MUST enforce the core formatting rules: the subject line MUST be a maximum of 72 characters, imperative mood, and follow the Conventional Commits format.

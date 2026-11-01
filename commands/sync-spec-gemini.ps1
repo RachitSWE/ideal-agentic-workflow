@@ -47,7 +47,7 @@ if (-not (Test-Path $sessionDir)) {
 }
 
 # Locate the spec file in .agents/specs/session-[SHA]/
-$specFiles = Get-ChildItem -Path $sessionDir -Filter "*_SPEC.md"
+$specFiles = @(Get-ChildItem -Path $sessionDir -Filter "*_SPEC.md")
 if ($specFiles.Count -eq 0) {
     Write-Fail "No *_SPEC.md file found in $sessionDir."
     exit 1

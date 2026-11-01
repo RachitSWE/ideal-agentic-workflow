@@ -39,9 +39,11 @@ Auditors (S2) and Reviewers (S4, S8) MUST actively detect and reject any code or
 - **Violation**: Silencing compiler or linter errors via escape hatches: TypeScript `any`, `@ts-ignore`, `@ts-nocheck`, ESLint disable comments, blanket Python `except Exception: pass`, or suppressing warnings.
 - **Rule**: Fix the underlying architectural mismatch, type definition, or interface signature. Appeasement hacks are treated as critical defects.
 
-### AP-005: Bulk Staging & Nuclear Commits
-- **Violation**: Executing `git add .`, `git add -A`, or staging files blindly without inspecting the diff.
-- **Rule**: Every modified file MUST be staged individually and explicitly (`git add path/to/file.ts`). Plugin hooks actively block `git add .`.
+### AP-005: Bulk Staging & Scope-Aware Atomic Staging
+- **Violation**: Executing blind bulk staging (`git add .`, `git add -A`, `git add --all`) without targeted file or directory scope, or committing unstructured mega-diffs without inspecting changes.
+- **Rule**: Staging MUST adhere to one of two scope-aware staging modes:
+  - **Mode A: Surgical Mode** (default for bug fixes, atomic increments, and refactors): Every modified file MUST be staged individually and explicitly (`git add path/to/file.ts`). Target size is ~50–150 LOC per commit.
+  - **Mode B: Scaffold / Refactor Mode** (permitted when creating $\ge 15$ new cohesive files or initial feature scaffolding): Directory-scoped staging (`git add src/components/common/` or `commands/stage-commit.ps1` -Scaffold) is permitted, provided the commit body contains a structured manifest itemizing the scaffolded components. Blind `git add .` remains strictly blocked.
 
 ### AP-006: Context & Token Budget Exhaustion
 - **Violation**: Dumping entire monolithic source files into subagent prompts or conversation transcripts, causing memory saturation and degraded model reasoning.
@@ -55,6 +57,17 @@ Auditors (S2) and Reviewers (S4, S8) MUST actively detect and reject any code or
 - **Violation**: Deleting, truncating, or refactoring human-authored sections in `GEMINI.md` or architecture documents.
 - **Rule**: Agents may append new knowledge, update feature statuses, and record anti-patterns. Deleting or overwriting user documentation is strictly forbidden.
 
+### AP-009: Unread Context Execution & Phase-Transition Caching
+- **Violation**: Taking action tools (`run_command`, `write_to_file`, `replace_file_content`, `invoke_subagent`) upon entering a new phase without FIRST calling `view_file` on all designated mandatory phase files for that phase transition.
+- **Rule**: Every phase transition MUST begin with Phase Step 0: explicitly invoking `view_file` ONCE per phase transition on every mandatory file listed for that phase. Agents maintain active phase context in working memory throughout the phase, eliminating turn-by-turn re-reading to prevent token exhaustion and context compactions. Assuming knowledge or skipping `view_file` at a phase transition constitutes a verification failure.
+
+### AP-010: Main Agent Self-Review Fabrication
+- **Violation**: The main orchestrating agent invoking `write_to_file` or `replace_file_content` on ANY file matching:
+  - `.agents/session-[SHA]/code-review/review/review*.md`
+  - `.agents/specs/session-[SHA]/code-review/review/review*.md`
+  - `.agents/session-[SHA]/audit/bin/audit*.md`
+- **Rule**: The main orchestrating agent is strictly **READ-ONLY** (`view_file`) for all review and audit slice directories. Review files MUST be authored exclusively by independent subagents spawned via `invoke_subagent` (or external R-Agent). If the main agent authors a review file itself, the session is invalidated immediately.
+
 ---
 
 ## 3. Workflow Lifecycle Invariants (S1–S11)
@@ -62,9 +75,10 @@ Auditors (S2) and Reviewers (S4, S8) MUST actively detect and reject any code or
 The workflow follows a strict, non-negotiable state machine:
 `S1 (Context) -> S2 (Audit) -> S3 (Plan) -> S4 (Plan Review) -> S5 (Plan Fix) -> S6 (Code) -> S7 (Test) -> S8 (Code Review) -> S9 (Bug Fix) -> S10 (Commit) -> S11 (Sync)`
 
+- **Phase Step 0 Read Gate**: At each phase transition (entering S1, S2, etc.), the agent MUST call `view_file` once on all designated mandatory files before calling any commands, writing code, or spawning subagents. Active context is cached in memory throughout that phase.
 - **Pre-Code Gate**: NEVER write production code before `plan.md` exists and is signed off with `LGTM` by all S4 reviewers.
 - **Pre-Review Gate**: NEVER invoke S8 Code Review if any automated test in S7 is failing.
-- **Consensus Gate**: Zero self-review. Review files (`review(n).md`) MUST originate from independently spawned subagents or R-Agent. A single `CHANGES_REQUESTED` blocks advancement to S10.
+- **Consensus Gate**: Zero self-review (AP-010). The main agent is strictly prohibited from writing `review(n).md`. Review files MUST originate from independently spawned subagents or R-Agent. A single `CHANGES_REQUESTED` blocks advancement to S10.
 - **Commit Gate**: NEVER proceed to S10 Git Commit if any task in `task.md` remains unchecked `[ ]`.
 - **First Action Invariant**: ALWAYS read `GEMINI.md` in full before reading or modifying any source file.
 - **Initialization Invariant**: ALWAYS initialize `.agents/session-[SHA]/` before starting S2 or S3.
@@ -119,3 +133,33 @@ Every commit generated during S10 Git Commit MUST adhere to the following schema
   - Remediate the exact issues cited in the review.
   - Re-run verification and resubmit for peer review.
 - Reviewers MUST be matched to the detected project stack using `skills/s8-code-review/resources/task-reviewer-matrix.md`.
+
+---
+
+## 7. Universal Developer Invariants (Senior Enterprise Standards)
+
+All agents, auditors (S2), and reviewers (S4, S8) MUST enforce these universal architectural invariants across all codebases:
+
+### 7.1 Structural Code & Typing Invariants
+1. **Strictly 1 Type Per File in OOP**: Every production class, interface, record, or enum in object-oriented stacks (Java, C#, etc.) MUST reside in its own dedicated source file matching the type name. Static nested classes, non-static inner classes, and inline helper records are prohibited in production packages (`src/main`).
+2. **Zero Compiler Appeasement Pragmas**: Suppressing compiler or linter diagnostics via escape hatches (`@SuppressWarnings`, `@ts-ignore`, `@ts-nocheck`, `any`, blanket `except Exception: pass`, `#[allow(dead_code)]`) is strictly FORBIDDEN. All production code must compile warning-free with strict typing.
+
+### 7.2 Security, Identity & Secret Governance
+3. **Two-Phase Escalation & Intermediate Token Quarantine**: High-privilege access tokens must never be issued on unverified credentials. Intermediate authentication tokens (2FA handoffs, password reset tokens) MUST be short-lived ($\le 5$ minutes), single-use, and strictly quarantined from administrative APIs.
+4. **Single-Use JTI Invalidation**: Single-use intermediate tokens MUST record unique cryptographic JWT IDs (`jti`) revoked immediately upon consumption, utilizing distributed caching (Redis) paired with an in-memory fallback during cache downtime.
+5. **Client-Side Secret Exposure Prohibition**: Never prefix private credentials, bot tokens, OAuth client secrets, or database URLs with public bundler prefixes (`NEXT_PUBLIC_`, `VITE_`, `REACT_APP_`). Client bundles must receive only public endpoints and non-sensitive flags.
+6. **Hierarchical Privilege Gating**: Administrative actions must evaluate hierarchical rank dynamically, failing closed if target rank $\ge$ operator rank. Administrator self-deletion is globally prohibited.
+
+### 7.3 Frontend State, UI & Accessibility Invariants
+7. **1:1 Route Mirroring & Component Decomposition Ceiling**: Route folders under `src/app/` must provide both `layout.tsx` (RSC metadata shell) and `page.tsx` (view). Route-specific UI components and API clients must mirror the route path 1:1. Every `.tsx` file MUST define $\le 1$ primary component with $\le 2$ inline JSX child elements.
+8. **Dirty State & Unsaved Changes Synchronization**: Form mutations and configuration edits MUST synchronize with an `isDirty` state tracker, docking a persistent `UnsavedChangesBar` with `beforeunload` protection against accidental navigation loss.
+9. **Atomic Token Refresh Mutex Queue**: When API requests encounter 401 Unauthorized, client interceptors MUST execute an atomic `isRefreshing` mutex lock with a queued request replay mechanism, preventing token rotation race conditions from concurrent calls.
+10. **WCAG 2.2 AA Accessibility & Motion Safety**: Interactive buttons and controls MUST maintain a minimum 44px $\times$ 44px touch target on mobile viewports and provide high-contrast `:focus-visible` outline rings ($3:1$ contrast ratio). Animations must respect `prefers-reduced-motion: reduce`.
+
+### 7.4 Backend, Persistence & Network Invariants
+11. **Concrete Type Deserialization on REST Clients**: Outbound HTTP clients must deserialize responses into concrete, strongly typed DTOs. Deserializing into abstract classes or ASTs (e.g. Jackson `JsonNode`, raw `Map<String, Object>`) is prohibited.
+12. **Virtual Thread Concurrency Non-Pinning**: In virtual thread runtimes, carrier threads must not be pinned or blocked by `synchronized` blocks or `Thread.sleep`; use `ReentrantLock` and non-blocking asynchronous I/O.
+13. **Migration-First Schema Authority (`ddl-auto: validate`)**: Production relational schemas must be governed exclusively by immutable, numbered migration scripts. ORM automatic schema mutation in production is strictly forbidden.
+14. **Document TTL Lifecycle & Redis Sliding-Window Rate Limiting**: Ephemeral document collections must declare automated TTL indexes. Redis keys must follow hierarchical namespacing with mandatory TTL expirations, and high-throughput throttlers must use atomic Lua sliding-window sorted sets.
+15. **Mandatory Runtime Bootstrap & Smoke Gate (S7-B Gate)**: Unit tests with mocks alone cannot certify release readiness. Changes modifying beans, entities, routes, or UI components must pass automated runtime smoke tests (e.g. `@SpringBootTest`, Playwright browser tests, Testcontainers persistence cycles) before peer review sign-off.
+

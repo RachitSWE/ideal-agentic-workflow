@@ -16,7 +16,9 @@ This rigorous approach mimics a real-world engineering team where peer consensus
 
 ## 2. Mandatory Files to Read at this Step
 
-Before and during execution of S8, the agent MUST explicitly read:
+### Phase Step 0: Mandatory `view_file` Execution Gate
+Before preparing `submit(N).md` or spawning any review subagents, the orchestrating agent MUST explicitly invoke `view_file` on EVERY file listed below. Proceeding without `view_file` tool calls violates **AP-009 (Unread Context Execution)**.
+
 1. **Routing Matrix & Review Guidelines**:
    - `skills/s8-code-review/resources/task-reviewer-matrix.md` (Authoritative mapping between task type tags and reviewer subagents)
    - `skills/s8-code-review/resources/code-review-guide.md` (Checklist, anti-pattern detection rules, and verdict guidelines)
@@ -52,8 +54,10 @@ Before and during execution of S8, the agent MUST explicitly read:
 ## 3. Hard Gating and Behavioral Rules
 The integrity of the review process relies entirely on strict adherence to the project's foundational behavioral constraints:
 - **Pre-Review Test Gate**: "NEVER invoke S8 code review if any automated test is failing."
-- **Zero Self-Review Invariant**: "NEVER write a review file yourself. Review MUST come from real subagents or R-Agent."
-- **Zero Mock Reviews**: Fake reviews or simulated approvals constitute a critical workflow failure.
+- **Zero Self-Review Invariant (AP-010)**: 
+  **THE MAIN ORCHESTRATOR MUST NEVER CALL `write_to_file` OR `replace_file_content` ON ANY PATH IN `.agents/session-[SHA]/code-review/review/`.**
+  Authoring a review file as the main agent is an instant workflow failure. Review files MUST originate exclusively from independent subagents spawned via `invoke_subagent` (or external R-Agent).
+- **Zero Mock Reviews**: Fake reviews, self-authored reviews, or simulated approvals constitute a critical workflow failure that invalidates the session.
 
 ---
 
@@ -78,24 +82,44 @@ Read `skills/s8-code-review/resources/task-reviewer-matrix.md` and spawn the app
 - **Duolithic Mode**: Output R-Agent prompt delegating review of `submit(N).md` with 3–4 specialized reviewers. Wait for `RAGENT_DONE`.
 - **Trivial Mode**: S8 is skipped entirely.
 
-### 4.3 Subagent Invocation Payload
-When calling `invoke_subagent`, the prompt payload for each reviewer MUST include:
-1. Absolute path to `submit(N).md`.
-2. The specific reviewer persona file content loaded from `agents/<reviewer-name>.md`.
-3. The review guide loaded from `skills/s8-code-review/resources/code-review-guide.md`.
-4. The output path: `.agents/session-[SHA]/code-review/review/review(N).md`.
-5. Mandatory verdict schema: `LGTM` or `CHANGES_REQUESTED`.
+### 4.3 Exact Subagent Invocation Schema & Payload
+When calling `invoke_subagent`, the prompt payload for each reviewer MUST explicitly instruct the subagent to physically write its own review file to disk using `write_to_file`.
+
+Example for Standard Mode:
+```json
+invoke_subagent({
+  "Subagents": [
+    {
+      "TypeName": "fullstack-implementation-reviewer",
+      "Role": "Implementation Code Reviewer",
+      "Prompt": "You are the Fullstack Implementation Reviewer. Read .agents/session-[SHA]/code-review/submit/submit(N).md and skills/s8-code-review/resources/code-review-guide.md using view_file. Inspect the diff against AP-001 through AP-004. You MUST physically author your review to .agents/session-[SHA]/code-review/review/review(1).md using write_to_file. The main orchestrator cannot write this file. Emit LGTM or CHANGES_REQUESTED with line-level findings."
+    },
+    {
+      "TypeName": "postgres-hibernate-flyway-reviewer",
+      "Role": "Database Persistence Reviewer",
+      "Prompt": "You are the Database Persistence Reviewer. Read .agents/session-[SHA]/code-review/submit/submit(N).md and skills/s8-code-review/resources/code-review-guide.md using view_file. Inspect the persistence layer for Flyway checksums, sequence IDs, lazy fetching, and auto-DDL ban. You MUST physically author your review to .agents/session-[SHA]/code-review/review/review(2).md using write_to_file. The main orchestrator cannot write this file. Emit LGTM or CHANGES_REQUESTED with line-level findings."
+    }
+  ]
+})
+```
+
+### 4.4 Reactive Wait Gate (No Tool Loop)
+After calling `invoke_subagent`:
+1. The main orchestrator MUST immediately STOP calling tools. Do NOT poll, sleep, or loop.
+2. Antigravity will automatically notify and wake you up when the subagents complete.
+3. Upon wakeup, call `view_file` on `.agents/session-[SHA]/code-review/review/review(1).md` and `review(2).md` to evaluate the verdicts.
 
 ---
 
 ## 5. Progression Gate & Iteration Loops
 Upon receiving all `review(n).md` files:
 - **Consensus Requirement**: "LGTM from ALL reviewers required before proceeding. A single CHANGES_REQUESTED blocks advancement."
-- **If CHANGES_REQUESTED**:
-  - Enter S9 Bug Fix phase immediately.
-  - Remediate all issues in code.
-  - Re-run targeted S7 Automated Testing until 100% pass.
-  - Create `submit(N+1).md` with fix changelog and re-invoke reviewers until unanimous approval.
+- **Two-Round Circuit Breaker Enforcement**:
+  - **Round 1 (`submit(0).md`)**: If any reviewer emits `CHANGES_REQUESTED`, transition immediately to S9 Bug Fix. Remediate issues in code, verify 100% green pass in S7, create `submit(1).md` with fix changelog, and re-invoke reviewers for Round 2.
+  - **Round 2 (`submit(1).md`)**: If any reviewer still emits `CHANGES_REQUESTED` on Round 2, the circuit breaker trips. The reviewer MUST EITHER:
+    1. Provide the exact drop-in patch diff in `review(n).md` to achieve immediate `LGTM`, which S9 applies surgically and verifies via S7 before marking the task complete; OR
+    2. Escalate directly to the human operator (`CHANGES_REQUESTED (CIRCUIT_BREAKER_TRIPPED)`), halting autonomous loops for human instruction.
+  - Under NO circumstances may code review rejection loops exceed 2 cycles.
 - **If Unanimous LGTM**:
   - Mark active task as `[x]` in `.agents/session-[SHA]/task.md`.
   - If incomplete tasks remain: Loop back to S6 Coding for the next task.

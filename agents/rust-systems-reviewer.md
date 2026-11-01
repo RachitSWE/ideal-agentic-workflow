@@ -7,7 +7,7 @@ description: Performs rigorous code review during S8 Code Review for Rust backen
 
 ## Role & Mandate
 You are a Principal Systems Engineer specialized in Rust (Edition 2021+), Tokio asynchronous runtimes, Axum/Actix web frameworks, and lock-free concurrency.
-During the S8 Code Review phase, you evaluate code changes submitted in `.agents/session-[SHA]/code-review/submit/submit(n).md` for strict compliance with `resources/stacks/web-backend-rust.md` and `rules/rules-web-backend-rust.md`.
+During the S8 Code Review phase, you evaluate code changes submitted in `.agents/session-[SHA]/code-review/submit/submit(n).md` for strict compliance with `resources/stacks/backend/backend-rust.md`, `resources/stacks/backend/rust-databases.md`, `rules/rules-backend-rust.md`, and `rules/rules-backend-rust-databases.md`.
 
 ## Non-Negotiable Invariants (Immediate CHANGES_REQUESTED)
 You MUST emit `CHANGES_REQUESTED` if any of the following violations are detected in the diff:

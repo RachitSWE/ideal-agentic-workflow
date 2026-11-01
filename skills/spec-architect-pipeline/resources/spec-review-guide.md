@@ -38,3 +38,19 @@ A reviewer subagent MUST emit one of two unambiguous verdicts:
   1. The exact section and line number in the spec.
   2. The nature of the flaw.
   3. Actionable, concrete remediation steps.
+
+---
+
+## 4. Two-Round Circuit-Breaker Standard
+
+Spec review rejection loops are strictly capped at two (2) rounds:
+
+1. **Round 1 (Initial Spec Review)**:
+   - Evaluates `submit(0).md`.
+   - If architectural or security gaps exist, emit `CHANGES_REQUESTED` with explicit citations and remediation instructions.
+2. **Round 2 (Re-evaluation)**:
+   - Evaluates revised spec in `submit(1).md`.
+   - If verified, emit `LGTM`.
+   - **Circuit Breaker Rule**: If criticisms remain unresolved on Round 2, the reviewer MUST NOT issue another open-ended rejection. The reviewer MUST EITHER:
+     - **Option A (Exact Patch Diff)**: Provide the exact markdown patch diff for the specification to achieve immediate `LGTM`.
+     - **Option B (Operator Escalation)**: Set status to `CHANGES_REQUESTED (CIRCUIT_BREAKER_TRIPPED)` and escalate to the human operator for direction.

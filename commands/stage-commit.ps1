@@ -13,9 +13,12 @@
 .PARAMETER Subject
     Subject line: max 72 chars, lowercase, imperative mood, no period at end.
 .PARAMETER Body
-    Mandatory commit body: max 150 chars, lowercase, explaining why and atomic justification if > 150 insertions.
+    Mandatory commit body: explaining rationale/manifest and atomic justification. Max 150 chars in Mode A (or 300 chars in Mode B manifest).
+.PARAMETER Scaffold
+    Optional switch to enable Mode B (Scaffold / Refactor Mode) permitting directory-scoped staging for cohesive scaffolding.
 .EXAMPLE
     pwsh -File .\commands\stage-commit.ps1 -Files @("src/order.ts", "tests/order.test.ts") -Type feat -Scope order -Subject "implement order cancellation logic" -Body "adds cancellation state transition and emits event"
+    pwsh -File .\commands\stage-commit.ps1 -Files @("src/components/common/") -Type feat -Scope ui -Subject "scaffold common design system components" -Body "manifest: buttons, dialogs, inputs, avatars" -Scaffold
 #>
 
 param (
@@ -32,7 +35,9 @@ param (
     [string]$Subject,
 
     [Parameter(Mandatory=$true)]
-    [string]$Body
+    [string]$Body,
+
+    [switch]$Scaffold
 )
 
 Set-StrictMode -Version Latest
@@ -54,11 +59,15 @@ function Write-Success([string]$msg) {
 foreach ($f in $Files) {
     $trimmed = $f.Trim()
     if ($trimmed -eq "." -or $trimmed -eq "*" -or $trimmed -eq "-A" -or $trimmed -eq "--all") {
-        Write-Fail "AP-005 VIOLATION: Bulk staging ('$trimmed') is strictly prohibited. Provide explicit file paths."
+        Write-Fail "AP-005 VIOLATION: Blind bulk staging ('$trimmed') is strictly prohibited. Provide explicit file paths or directory paths with -Scaffold."
         exit 1
     }
     if (-not (Test-Path $trimmed)) {
-        Write-Fail "Target file not found: '$trimmed'"
+        Write-Fail "Target path not found: '$trimmed'"
+        exit 1
+    }
+    if (-not $Scaffold -and (Test-Path $trimmed -PathType Container)) {
+        Write-Fail "AP-005 VIOLATION: Directory path '$trimmed' cannot be staged in Surgical Mode. Use -Scaffold switch for directory-scoped scaffolding (>= 15 files)."
         exit 1
     }
 }
@@ -76,24 +85,32 @@ if ($formattedSubject.EndsWith(".")) {
     exit 1
 }
 
-# 3. Validation: Body formatting
+# 3. Validation: Body formatting & Manifest validation
 if ([string]::IsNullOrWhiteSpace($Body)) {
     Write-Fail "Commit body is mandatory under S10 Conventional Commit invariants."
     exit 1
 }
 
-if ($Body.Length -gt 150) {
+if (-not $Scaffold -and $Body.Length -gt 150) {
     Write-Fail "Commit body exceeds 150 characters ($($Body.Length) chars). Keep body concise."
+    exit 1
+} elseif ($Scaffold -and $Body.Length -gt 300) {
+    Write-Fail "Scaffold commit manifest body exceeds 300 characters ($($Body.Length) chars)."
     exit 1
 }
 
-# 4. Stage each file individually
-Write-Step "Staging $($Files.Count) explicit file(s)..."
+if ($Scaffold -and $Body.Length -lt 15) {
+    Write-Fail "Mode B Scaffold commit requires a structured manifest in the commit body itemizing scaffolded modules."
+    exit 1
+}
+
+# 4. Stage each target path (file or directory)
+Write-Step "Staging $($Files.Count) explicit target path(s)..."
 foreach ($f in $Files) {
     Write-Step "  -> git add `"$f`""
     git add $f
     if ($LASTEXITCODE -ne 0) {
-        Write-Fail "Failed to stage file: $f"
+        Write-Fail "Failed to stage target: $f"
         exit 1
     }
 }
@@ -107,9 +124,11 @@ if ($shortstat -match '(\d+)\s+insertion') {
     $insertions = [int]$matches[1]
 }
 
-if ($insertions -gt 150) {
+if ($insertions -gt 150 -and -not $Scaffold) {
     Write-Host "[STAGE-COMMIT] [WARNING] Staged diff has $insertions insertions (> 150 guideline)." -ForegroundColor Yellow
     Write-Host "[STAGE-COMMIT] [WARNING] Ensure commit body explicitly justifies why this is one atomic unit." -ForegroundColor Yellow
+} elseif ($Scaffold) {
+    Write-Step "Scaffold mode active: verified directory staging with $insertions insertions and structured manifest."
 }
 
 # 6. Execute Git Commit

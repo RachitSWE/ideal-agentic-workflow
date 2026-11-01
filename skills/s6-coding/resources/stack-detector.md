@@ -29,7 +29,7 @@ The agent MUST use this extracted information to determine which stack pack appl
 
 ### 2.2 Load Applicable Stack Packs
 After identifying the framework from `GEMINI.md`, the agent MUST locate the corresponding file within the `resources/stacks/` directory. 
-The agent MUST read the contents of this stack pack (e.g., `web-nextjs-turborepo.md` or `mc-fabric.md`) completely into its active context.
+The agent MUST read the contents of this stack pack (e.g., `resources/stacks/frontend/nextjs.md` or `resources/stacks/minecraft/mc-fabric.md`) completely into its active context.
 The agent MUST explicitly memorize the "Architecture Rules" and "Common Anti-Patterns" defined within that specific stack pack.
 The agent MUST apply these loaded rules to every line of code generated during the S6 phase, ensuring total compliance with the project's idiomatic constraints.
 The agent MUST explicitly verify its implementation against these rules before concluding the task.

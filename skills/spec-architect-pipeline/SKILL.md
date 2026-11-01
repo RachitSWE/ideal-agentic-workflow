@@ -41,7 +41,10 @@ All spec generation state is quarantined inside `.agents/specs/session-[SHA]/`:
 
 ## 3. Mandatory Files to Read at this Step
 
-Before and during execution of the Spec Architecture Pipeline, the agent MUST explicitly read:
+### Phase Step 0: Mandatory `view_file` Execution Gate
+Before initializing the spec session, asking interview questions, or authoring specifications, the orchestrating agent MUST explicitly call `view_file` on EVERY relevant file listed below. Executing the pipeline without reading guidelines violates **AP-009 (Unread Context Execution)**.
+Furthermore, the orchestrating agent is strictly prohibited from authoring `review(n).md` files directly (violates **AP-010 (Zero Self-Review)**); spec reviews in SP4 MUST be authored by spawned subagents.
+
 1. **Pipeline Specifications & Prompts**:
    - `skills/spec-architect-pipeline/resources/spec-grill-rubric.md` (10-12 architectural dimensions grilling rubric)
    - `skills/spec-architect-pipeline/resources/spec-template.md` (Canonical specification document schema)
@@ -115,16 +118,42 @@ flowchart TD
 ---
 
 ### SP4: Multi-Agent Spec Review (S4 Quality Gate)
-1. Prepare submission payload:
+1. **Prepare Submission Payload**:
    Write `.agents/specs/session-[SHA]/code-review/submit/submit(0).md` containing the draft spec and `skills/spec-architect-pipeline/resources/spec-review-guide.md`.
-2. Spawn **three independent reviewer subagents** via `invoke_subagent`:
-   - `agents/spec-system-architect-reviewer.md`
-   - `agents/spec-security-edgecase-reviewer.md`
-   - `agents/spec-testability-scale-reviewer.md`
-3. Wait for all subagents to write their reports to `.agents/specs/session-[SHA]/code-review/review/review(n).md`.
-4. **Consensus Rule**:
-   - If ALL reviewers emit `LGTM`: Advance to SP6.
-   - If ANY reviewer emits `CHANGES_REQUESTED`: Advance to SP5.
+2. **⛔ MAIN AGENT ZERO-WRITE INVARIANT (AP-010)**:
+   - **THE MAIN AGENT MUST NEVER CALL `write_to_file` OR `replace_file_content` TO AUTHOR `review(1).md`, `review(2).md`, OR `review(3).md`.**
+   - Writing a review file as the main orchestrator is a critical invariant violation that voids the specification.
+   - All reviews MUST be written exclusively by the spawned reviewer subagents.
+3. **Spawn Three Independent Reviewer Subagents via `invoke_subagent`**:
+   ```json
+   invoke_subagent({
+     "Subagents": [
+       {
+         "TypeName": "spec-system-architect-reviewer",
+         "Role": "Spec System Architect Reviewer",
+         "Prompt": "You are the Spec System Architect Reviewer. Read .agents/specs/session-[SHA]/code-review/submit/submit(0).md and skills/spec-architect-pipeline/resources/spec-review-guide.md using view_file. Inspect domain boundaries, interfaces, and persistence contracts. You MUST physically author your review to .agents/specs/session-[SHA]/code-review/review/review(1).md using write_to_file. The main orchestrator cannot write this file. Emit LGTM or CHANGES_REQUESTED with line-level findings."
+       },
+       {
+         "TypeName": "spec-security-edgecase-reviewer",
+         "Role": "Spec Security & Edge-Case Reviewer",
+         "Prompt": "You are the Spec Security & Edge-Case Reviewer. Read .agents/specs/session-[SHA]/code-review/submit/submit(0).md and skills/spec-architect-pipeline/resources/spec-review-guide.md using view_file. Inspect OWASP risks, auth boundaries, idempotency, and failure modes. You MUST physically author your review to .agents/specs/session-[SHA]/code-review/review/review(2).md using write_to_file. The main orchestrator cannot write this file. Emit LGTM or CHANGES_REQUESTED with line-level findings."
+       },
+       {
+         "TypeName": "spec-testability-scale-reviewer",
+         "Role": "Spec Testability & Scale Reviewer",
+         "Prompt": "You are the Spec Testability & Scale Reviewer. Read .agents/specs/session-[SHA]/code-review/submit/submit(0).md and skills/spec-architect-pipeline/resources/spec-review-guide.md using view_file. Inspect TDD tasks, test pyramid, observability, and scaling limits. You MUST physically author your review to .agents/specs/session-[SHA]/code-review/review/review(3).md using write_to_file. The main orchestrator cannot write this file. Emit LGTM or CHANGES_REQUESTED with line-level findings."
+       }
+     ]
+   })
+   ```
+4. **Reactive Wait Gate (No Tool Loop)**:
+   - After calling `invoke_subagent`, the main orchestrator MUST immediately STOP calling tools.
+   - Antigravity will automatically resume execution when all 3 reviewers complete.
+   - Upon wakeup, call `view_file` on `review(1).md`, `review(2).md`, and `review(3).md`.
+5. **Consensus Rule & 2-Round Circuit Breaker**:
+   - **Unanimous LGTM**: If ALL 3 reviewers emit `LGTM`: Advance to SP6.
+   - **Round 1 CHANGES_REQUESTED**: If ANY reviewer requests changes on `submit(0).md`, advance to SP5 to revise the spec and submit `submit(1).md` for Round 2 review.
+   - **Round 2 Circuit Breaker Tripped**: If ANY reviewer requests changes on `submit(1).md`, the circuit breaker trips. The reviewer MUST provide the exact drop-in spec patch diff or escalate to the human operator. Re-review loops are strictly capped at 2 rounds.
 
 ---
 
@@ -132,7 +161,8 @@ flowchart TD
 1. Read all reviewer criticisms in `review(n).md`.
 2. Methodically revise `.agents/specs/session-[SHA]/YYYY-MM-DD_[feature_name]_SPEC.md` to address every point of feedback.
 3. Write `submit(n+1).md` detailing the fix changelog.
-4. Resubmit to the reviewing subagents until unanimous `LGTM` is achieved.
+4. Resubmit to the reviewing subagents for Round 2 re-evaluation.
+5. **Circuit Breaker Handling**: If Round 2 produces unresolved rejections, apply the reviewer's provided patch diff or escalate to the human operator; never loop into a 3rd cycle.
 
 ---
 

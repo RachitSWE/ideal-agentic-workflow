@@ -20,7 +20,9 @@ No task may ever be marked `[x]` in `task.md` until this loop is cleanly complet
 
 ## 3. Mandatory Files to Read at this Step
 
-Before modifying source files or resubmitting for review, the agent MUST explicitly read:
+### Phase Step 0: Mandatory `view_file` Execution Gate
+Before touching source files to fix bugs or generating resubmission documents, the orchestrating agent MUST explicitly call `view_file` on EVERY file listed below. Fixing defects without reading the reviewer findings and guidelines violates **AP-009 (Unread Context Execution)**.
+
 1. **Review Findings**:
    - `.agents/session-[SHA]/code-review/review/review(n).md` (All reviewer reports containing `CHANGES_REQUESTED` findings)
 2. **Review Guidelines & Invariant Rules**:
@@ -109,12 +111,17 @@ Write an incremented submission file (e.g., `submit(1).md`) to `.agents/session-
 - **Changelog of Fixes**: Exact mapping of reviewer critiques to code diff changes.
 - **Verification Evidence**: Terminal output proving tests pass with 0 errors.
 
-### 4.5 Step 5: Peer Review Re-Evaluation
+### 4.5 Step 5: Peer Review Re-Evaluation & Circuit Breaker
 Send a message to the reviewers or re-invoke S8 Code Review with `submit(N+1).md`.
-- If any reviewer still emits `CHANGES_REQUESTED`, repeat S9.
-- If ALL reviewers emit `LGTM`:
-  1. Mark the active task as `[x]` in `.agents/session-[SHA]/task.md`.
-  2. Tick the task review complete in `.agents/session-[SHA]/CHECKLIST.md`.
-  3. Inspect `task.md` for remaining incomplete tasks:
-     - If incomplete tasks remain: Loop back to S6 Coding to pick the next lowest-indexed task.
-     - If all tasks are `[x]`: Proceed to S10 Git Commit.
+- **Round 1 Resubmission**: Re-evaluate fixes in `submit(1).md`.
+- **Round 2 Circuit Breaker Handling**:
+  - If ALL reviewers emit `LGTM`:
+    1. Mark the active task as `[x]` in `.agents/session-[SHA]/task.md`.
+    2. Tick the task review complete in `.agents/session-[SHA]/CHECKLIST.md`.
+    3. Inspect `task.md` for remaining incomplete tasks:
+       - If incomplete tasks remain: Loop back to S6 Coding to pick the next lowest-indexed task.
+       - If all tasks are `[x]`: Proceed to S10 Git Commit.
+  - If any reviewer still emits `CHANGES_REQUESTED` on Round 2 (Circuit Breaker Tripped):
+    - **Patch Diff Provided**: If the reviewer supplied an exact drop-in patch diff, apply it surgically, re-verify via S7 Automated Testing, and mark the task `[x]`.
+    - **Operator Escalation**: If no patch was provided or an irreconcilable defect remains, immediately halt autonomous execution, record `CIRCUIT_BREAKER_TRIPPED` in `.agents/session-[SHA]/CHECKLIST.md`, and escalate to the human operator.
+    - Under NO circumstances may the agent loop into a 3rd open-ended bug fix cycle.

@@ -47,3 +47,24 @@ Using `any` types in TypeScript, `// @ts-ignore` directives, or forced unwrap op
 Compiler errors indicate a fundamental misunderstanding of the data flow or the framework's constraints.
 The agent MUST solve the underlying architectural issue rather than masking it with unsafe type casting or suppressed warnings.
 The agent MUST guarantee that the code compiles cleanly while adhering to the strictest type safety settings available.
+
+### 2.5 AP-005: Bulk Staging & Scope-Aware Atomic Staging
+The agent MUST NOT execute blind bulk staging (`git add .`, `git add -A`, or blind wildcard staging). Staging MUST strictly adhere to:
+- **Mode A: Surgical Mode (Default)**: Inspect modifications via `git diff --stat` and stage surgically per-file (`git add <file>`), targeting ~50–150 insertions.
+- **Mode B: Scaffold / Refactor Mode**: When creating $\ge 15$ new cohesive files or initial feature scaffolding, directory-scoped staging (`git add src/components/common/` or `commands/stage-commit.ps1` -Scaffold) is permitted with a structured manifest in the commit body.
+
+### 2.6 AP-006: Context & Token Budget Exhaustion
+The agent MUST NOT dump monolithic source files into subagent prompts or conversation transcripts. Passing full files causes context window saturation and reasoning degradation. Pass only relevant line ranges, surgical diffs, and targeted specification slices.
+
+### 2.7 AP-007: Ghost Edits & State Isolation Violations
+The agent MUST NOT create temporary scratch files, unmanaged test scripts, or session state in the workspace root or system temp directories. All session state, audit slices, plans, checklists, and reviews MUST live exclusively within `.agents/session-[SHA]/`.
+
+### 2.8 AP-008: Destructive Documentation Mutations
+The agent MUST NOT delete, truncate, or overwrite human-authored sections in `GEMINI.md` or architecture documents. All documentation synchronization MUST be strictly append-only and monotonic.
+
+### 2.9 AP-009: Unread Context Execution & Phase-Transition Caching
+The agent MUST NOT execute commands, author code, create plans, or spawn subagents upon entering a new phase without FIRST calling `view_file` on every mandatory file designated for that phase transition. Calling `view_file` is required ONCE per phase transition (entering S1, entering S2, etc.); active context is maintained in working memory throughout the phase, eliminating turn-by-turn re-reading to prevent token exhaustion and context compactions.
+
+### 2.10 AP-010: Main Agent Self-Review Fabrication
+The main orchestrating agent MUST NEVER call `write_to_file` or `replace_file_content` on ANY file under `.agents/session-[SHA]/code-review/review/` or `.agents/session-[SHA]/audit/bin/`. All review reports (`review(n).md`) MUST be authored exclusively by independent subagents spawned via `invoke_subagent`. Main agent self-review voids the session immediately.
+

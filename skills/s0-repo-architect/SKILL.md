@@ -35,7 +35,9 @@ The agent MUST NOT invoke this skill in the following scenarios:
 
 ## 3. Mandatory Files to Read at this Step
 
-Before and during execution of S0, the agent MUST explicitly read:
+### Phase Step 0: Mandatory `view_file` Execution Gate
+Before running discovery commands or writing `GEMINI.md`, the agent MUST explicitly call `view_file` on EVERY file listed below. Executing actions without reading violates **AP-009 (Unread Context Execution)**.
+
 1. **Schema Specifications & Templates**:
    - `skills/s0-repo-architect/schemas/gemini-prd-schema.json` (The canonical JSON schema governing GEMINI.md structure)
    - `skills/s0-repo-architect/schemas/anti-pattern-schema.json` (Schema defining mandatory anti-pattern format)

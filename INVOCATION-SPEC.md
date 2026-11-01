@@ -8,7 +8,7 @@ This pipeline conducts a deep 10–12 question system design interview (`/grill-
 ## 📋 Copyable Spec Invocation Prompt
 
 ```markdown
-# INVOKE: spec-architect-pipeline (v1.2.0)
+# INVOKE: spec-architect-pipeline (v1.3.1)
 
 ## 1. Feature Brief & High-Level Intent
 - **Feature Name**: [INSERT KEBAB-CASE NAME, e.g. transaction-history]
@@ -48,10 +48,12 @@ flowchart TD
   - Target Document: `GEMINI.md` (§5 Open Features).
 
 ## 3. Non-Negotiable Invariants
-1. Spec remains permanently isolated in `.agents/specs/session-[SHA]/`.
-2. Do NOT copy the spec to external folders; link directly from the session directory.
-3. Every task in the spec must follow Red-Green-Refactor with exact test commands.
-4. Zero placeholders: no "TODO", "TBD", or "add validation".
+1. **Mandatory First Action Invariant (Phase Step 0 Read Gate / AP-009)**: On entering ANY phase (SP1–SP6), the orchestrating agent MUST explicitly call `view_file` ONCE on all mandatory phase files for that phase transition BEFORE executing any action tool (`run_command`, `write_to_file`, `replace_file_content`, `invoke_subagent`). Active context is cached in working memory throughout the phase, eliminating turn-by-turn re-reading.
+2. **Zero Self-Review Invariant (AP-010)**: The main orchestrating agent is strictly prohibited from authoring `review(n).md` files using `write_to_file` or `replace_file_content`. Multi-agent review in SP4 MUST be delegated to independent subagents (`spec-system-architect-reviewer`, `spec-security-edgecase-reviewer`, `spec-testability-scale-reviewer`) via `invoke_subagent`.
+3. Spec remains permanently isolated in `.agents/specs/session-[SHA]/`.
+4. Do NOT copy the spec to external folders; link directly from the session directory.
+5. Every task in the spec must follow Red-Green-Refactor with exact test commands.
+6. Zero placeholders: no "TODO", "TBD", or "add validation".
 
 ---
 **Directive**: Acknowledge feature brief, initialize `.agents/specs/session-[SHA]/`, and begin SP1.
@@ -65,7 +67,7 @@ Once SP6 completes, the certified spec is isolated in `.agents/specs/session-[SH
 To implement the feature, simply invoke the master S1–S11 workflow:
 
 ```markdown
-# INVOKE: ideal-agentic-workflow (v1.2.0)
+# INVOKE: ideal-agentic-workflow (v1.3.1)
 
 ## 1. Operating Mode
 - [x] **Standard**

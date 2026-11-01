@@ -21,7 +21,9 @@ The agent MUST NOT transition to S6 Coding until all reviewer concerns are resol
 
 ## 3. Mandatory Files to Read at this Step
 
-Before revising the plan, the agent MUST explicitly read:
+### Phase Step 0: Mandatory `view_file` Execution Gate
+Before editing `plan.md` or generating resubmission documents, the orchestrating agent MUST explicitly call `view_file` on EVERY file listed below. Remedying criticisms without loading reviewer findings into memory violates **AP-009 (Unread Context Execution)**.
+
 1. **Review Findings**:
    - `.agents/session-[SHA]/code-review/review/review(n).md` (All reviewer reports containing `CHANGES_REQUESTED` findings)
 2. **Current Plan Artifacts**:
@@ -93,7 +95,13 @@ The submission MUST contain a **Response to Reviewers** section structured as:
 - **Diff of Plan**: [Highlight new/modified plan sections]
 
 ## 4. Completion and Loop Transition
+
 Once `submit(N+1).md` is written:
 1. Re-invoke the S4 Plan Review skill (`skills/s4-plan-review/SKILL.md`).
 2. Spawn the reviewers to evaluate `submit(N+1).md`.
-3. Continue this cyclical process until unanimous LGTM is achieved.
+3. **Circuit Breaker Protocol (2-Round Maximum)**:
+   - **Round 1 Resubmission**: Reviewers evaluate `submit(1).md` for Round 2 approval.
+   - **Round 2 Resolution (Circuit Breaker Tripped)**: If any reviewer still emits `CHANGES_REQUESTED` on Round 2:
+     - If the reviewer provided an exact drop-in revision diff in `review(n).md`: apply the patch diff directly to `plan.md` and `task.md` and proceed immediately to S6 Coding.
+     - If the reviewer escalated or an irreconcilable impasse exists: halt autonomous execution, record `CIRCUIT_BREAKER_TRIPPED` in `.agents/session-[SHA]/CHECKLIST.md`, and escalate directly to the human operator for architectural guidance.
+   - Under NO circumstances may an autonomous agent loop into a 3rd open-ended plan review cycle.

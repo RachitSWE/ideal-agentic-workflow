@@ -17,7 +17,10 @@ Without this central intelligence hub, subsequent execution phases would operate
 The agent MUST treat the generation of the `plan.md` and `task.md` files as its absolute highest priority before any code generation is allowed to occur.
 
 ## 2. Mandatory Files to Read at this Step
-Before generating any plans, the agent MUST consume all available context and templates:
+
+### Phase Step 0: Mandatory `view_file` Execution Gate
+Before authoring `plan.md` or `task.md`, the orchestrating agent MUST explicitly call `view_file` on EVERY file listed below. Drafting plans without reading context violates **AP-009 (Unread Context Execution)**.
+
 1. **Templates & Rubrics**:
    - `resources/plan-template.md` (Mandatory schema for `.agents/session-[SHA]/plan.md`)
    - `resources/task-template.md` (Mandatory schema for `.agents/session-[SHA]/task.md` with architectural type tags)
@@ -48,6 +51,7 @@ The agent MUST explicitly generate two separate artifacts and write them to the 
    - **Antigravity Rule**: NEVER create `implementation_plan.md` as a UI artifact. Write the plan exclusively to `.agents/session-[SHA]/plan.md`.
 2. **The Prioritized Task List**: The agent MUST generate `.agents/session-[SHA]/task.md` (read `resources/task-template.md`) by running every identified task through the `skills/s3-planning/resources/priority-rubric.md` scoring formula (`Severity × Complexity × Dependencies`) and sorting the output sequentially.
    - **Mandatory Type Tags**: Every task MUST include an architectural type tag: `[frontend]`, `[backend]`, `[database]`, `[infra]`, or `[fullstack]` (or Minecraft domain tag: `[gameplay]`, `[mod-compat]`, `[mapping]`, `[architecture]`).
+   - **Mandatory Frontend Test Specification**: All `[frontend]` tasks MUST explicitly specify real automated render/mount tests (e.g., React Testing Library / Vitest) asserting that components mount without DOM exceptions and form submission triggers the real API client. Specifying `tsc --noEmit` as the sole test target for frontend tasks is strictly FORBIDDEN.
 3. **Expand CHECKLIST.md**: The agent MUST expand the task execution section of `.agents/session-[SHA]/CHECKLIST.md` with discrete S6→S7→S8 tracking rows for each planned task.
 
 ### 3.2 Fast Mode Protocol

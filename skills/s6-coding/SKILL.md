@@ -17,7 +17,9 @@ The S6 phase explicitly bridges the gap between approved planning and automated 
 
 ## 2. Mandatory Files to Read at this Step
 
-Before writing any code or modifying any source files, the agent MUST explicitly read:
+### Phase Step 0: Mandatory `view_file` Execution Gate
+Before touching ANY source file, running commands, or creating classes, the orchestrating agent MUST explicitly call `view_file` on EVERY file listed below (global standards, anti-patterns, and active stack rules/pack). Coding without loading stack invariants into context violates **AP-009 (Unread Context Execution)**.
+
 1. **Global Senior Developer Standards & Guidelines**:
    - `rules/AGENTS.md` (Global senior developer invariants AP-001 through AP-008)
    - `resources/senior-dev-standards.md` (Production engineering idioms, naming, and architectural alignment)
@@ -27,33 +29,23 @@ Before writing any code or modifying any source files, the agent MUST explicitly
    - `skills/s6-coding/resources/anti-patterns.md` (Canonical catalog of forbidden anti-patterns: AP-001 through AP-008)
    - `skills/s6-coding/resources/stack-detector.md` (Signatures for detecting framework, runtime, and package conventions)
 3. **Detected Stack Pack & Invariant Rules** (Load the active stack files identified during S1):
-   - **PostgreSQL + Hibernate + Flyway**:
-     - `resources/stacks/database-postgres-hibernate-flyway.md`
-     - `rules/rules-database-postgres-hibernate-flyway.md`
-   - **Next.js & Turborepo**:
-     - `resources/stacks/web-nextjs-turborepo.md`
-     - `rules/rules-web-nextjs-turborepo.md`
-   - **Java Spring Boot**:
-     - `resources/stacks/web-backend-java-spring.md`
-     - `rules/rules-web-backend-java-spring.md`
-   - **Python AI & RAG Backend**:
-     - `resources/stacks/web-backend-python-ai.md`
-     - `rules/rules-web-backend-python-ai.md`
-   - **Rust Systems & Backend**:
-     - `resources/stacks/web-backend-rust.md`
-     - `rules/rules-web-backend-rust.md`
-   - **PostgreSQL + Prisma**:
-     - `resources/stacks/database-postgres-prisma.md`
-     - `rules/rules-database-postgres-prisma.md`
-   - **MongoDB + Redis**:
-     - `resources/stacks/database-mongo-redis.md`
-     - `rules/rules-database-mongo-redis.md`
-   - **Minecraft Fabric**:
-     - `resources/stacks/mc-fabric.md`
-     - `rules/rules-mc-fabric.md`
-   - **Minecraft NeoForge**:
-     - `resources/stacks/mc-neoforge.md`
-     - `rules/rules-mc-neoforge.md`
+   - **Database Subsystems**:
+     - `resources/stacks/database/mongodb.md` & `rules/rules-database-mongodb.md`
+     - `resources/stacks/database/redis.md` & `rules/rules-database-redis.md`
+     - `resources/stacks/database/postgresql.md` & `rules/rules-database-postgresql.md`
+   - **Backend Subsystems**:
+     - `resources/stacks/backend/backend-java.md` & `rules/rules-backend-java.md`
+     - `resources/stacks/backend/java-databases.md` & `rules/rules-backend-java-databases.md`
+     - `resources/stacks/backend/backend-python.md` & `rules/rules-backend-python.md`
+     - `resources/stacks/backend/python-databases.md` & `rules/rules-backend-python-databases.md`
+     - `resources/stacks/backend/backend-rust.md` & `rules/rules-backend-rust.md`
+     - `resources/stacks/backend/rust-databases.md` & `rules/rules-backend-rust-databases.md`
+   - **Frontend Subsystems**:
+     - `resources/stacks/frontend/nextjs.md` & `rules/rules-frontend-nextjs.md`
+     - `resources/stacks/frontend/angular.md` & `rules/rules-frontend-angular.md`
+   - **Minecraft Modding Subsystems**:
+     - `resources/stacks/minecraft/mc-fabric.md` & `rules/rules-minecraft-fabric.md`
+     - `resources/stacks/minecraft/mc-forge.md` & `rules/rules-minecraft-forge.md`
    - **Stack Composer & Extensibility**:
      - `resources/stacks/_stack-composer.md`
 4. **Specialist Subagent Personas** (Adopt or consult based on the detected stack and active task):

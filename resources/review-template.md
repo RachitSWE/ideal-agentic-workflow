@@ -1,12 +1,16 @@
+<!-- ⛔ INVARIANT NOTICE: This file MUST be written by an independent subagent spawned via invoke_subagent. The main orchestrating agent is STRICTLY FORBIDDEN from calling write_to_file on this file (AP-010: Zero Self-Review). -->
+
 # Peer Review Report
 ### Reviewer Persona: [Reviewer Persona Name]
+### Review Round: [Round 1 of 2 | Round 2 of 2]
+### Circuit Breaker Status: [ACTIVE | TRIPPED_ESCALATED | RESOLVED_WITH_PATCH]
 
 ## Status
 
 [This field determines whether the pipeline can advance.]
 [It MUST be exactly one of the following:]
 - **LGTM** (Looks Good To Me - proceed to next phase)
-- **CHANGES_REQUESTED** (Fixes required before proceeding)
+- **CHANGES_REQUESTED** (Fixes required before proceeding; on Round 2 of 2, MUST include Exact Patch Diff below or trip Circuit Breaker)
 
 ## Findings
 
@@ -21,3 +25,8 @@
 [These fixes MUST map directly to the findings listed above.]
 1. [Fix 1]
 2. [Fix 2]
+
+## Exact Patch Diff (Mandatory for Round 2 CHANGES_REQUESTED Option A)
+```diff
+# Unified patch diff if providing direct resolution on Round 2
+```

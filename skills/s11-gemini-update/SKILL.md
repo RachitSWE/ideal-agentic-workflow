@@ -19,7 +19,9 @@ The S11 phase explicitly marks the boundary between the current session and the 
 
 ## 2. Mandatory Files to Read at this Step
 
-Before modifying `GEMINI.md` or closing the loop, the agent MUST explicitly read:
+### Phase Step 0: Mandatory `view_file` Execution Gate
+Before modifying `GEMINI.md` or emitting loop closure suggestions, the orchestrating agent MUST explicitly call `view_file` on EVERY file listed below. Updating documentation without verifying schema rules and non-destructive editing boundaries violates **AP-009 (Unread Context Execution)**.
+
 1. **Schema & Evolution Guidelines**:
    - `skills/s11-gemini-update/resources/gemini-schema.md` (Strict non-destructive editing boundaries, section immutability, and schema rules)
    - `resources/gemini-template.md` (Authoritative baseline GEMINI.md template reference)

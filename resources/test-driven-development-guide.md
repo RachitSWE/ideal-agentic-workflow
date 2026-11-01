@@ -91,3 +91,39 @@ it('should calculate discount accurately for premium members', () => {
 1. **Never mock what you do not own**: Wrap third-party services in domain adapter interfaces before mocking.
 2. **Prefer In-Memory or Testcontainers over Fake Repositories**: Mocking repositories often masks N+1 queries, missing SQL indexes, and transaction rollback failures.
 3. **Never verify mock internal calls when you can assert return values**: Assert outputs and observable state changes, not call counts of private methods.
+
+---
+
+## 6. The Closed-Loop Verification Illusion & S7-B Runtime Smoke Gate
+
+### 6.1 The Closed-Loop Verification Illusion
+In agentic coding, an agent can easily fall into the **Closed-Loop Verification Illusion**: authoring implementation code and simultaneously writing pure unit tests (e.g. `@ExtendWith(MockitoExtension.class)` or `jest.mock()`) that mock out all collaborators.
+Because the tests only assert against the agent's own mocked assumptions, the test suite reports 100% green passes. However, in production or real runtime environments, the application crashes immediately due to:
+- Bean wiring failures (`UnsatisfiedDependencyException`, circular injection, missing Spring annotations).
+- Broken database schema mappings, invalid sequence generators, and missing Flyway columns.
+- Broken REST controller routing, missing `@RequestBody`, or Jackson deserialization crashes.
+- Offline `localStorage` fallbacks masking broken backend API contracts.
+
+### 6.2 Mandatory S7-B Runtime Smoke Gate Requirements
+To eliminate this illusion, the S7 phase mandates Tier 3B: Runtime Smoke Verification Gate before submitting code to S8 peer review:
+1. **Spring Boot ApplicationContext Bootstrap**:
+   - Backend services MUST include an automated runtime smoke test:
+     ```java
+     @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+     class ApplicationSmokeTest {
+         @Autowired
+         private ApplicationContext context;
+
+         @Test
+         void contextLoads() {
+             assertThat(context).isNotNull();
+         }
+     }
+     ```
+   - Proves all beans, security filter chains, and configuration properties wire cleanly without runtime exceptions.
+2. **Real Persistence Lifecycle Verification**:
+   - Repositories MUST execute a real lifecycle cycle: `create -> read -> delete -> read` against an embedded database or Testcontainers.
+   - Proves table definitions, sequences, constraints, and entity mappings actually function in SQL.
+3. **Frontend Component Mount & Contract Verification**:
+   - Web frontend tasks MUST execute render/mount tests asserting that components mount without uncaught DOM exceptions and user interactions trigger the API client.
+   - `tsc --noEmit` validates static types only; it cannot substitute for automated render tests.

@@ -14,7 +14,10 @@ The agent MUST follow the protocols defined below to correctly measure project s
 
 ## 2. Mandatory Files to Read at this Step
 
-Before and during execution of S2, the agent MUST explicitly read:
+### Phase Step 0: Mandatory `view_file` Execution Gate
+Before measuring repository size or spawning any auditor subagents, the orchestrating agent MUST explicitly call `view_file` on EVERY relevant file listed below. Executing actions without reading context violates **AP-009 (Unread Context Execution)**.
+Furthermore, the orchestrating agent is strictly prohibited from authoring `audit(n).md` files directly (violates **AP-010 (Zero Self-Review)**); audits MUST be authored by spawned subagents.
+
 1. **Primary Project Specification**:
    - `GEMINI.md` (Read in full to establish baseline architectural constraints and directory tree)
 2. **Audit Schema & Guidelines**:

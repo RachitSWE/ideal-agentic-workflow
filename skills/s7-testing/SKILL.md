@@ -17,7 +17,9 @@ Adhering to this protocol guarantees that peer reviewers only inspect code that 
 
 ## 2. Mandatory Files to Read at this Step
 
-Before executing tests or running verification commands, the agent MUST explicitly read:
+### Phase Step 0: Mandatory `view_file` Execution Gate
+Before running test commands or test scripts, the orchestrating agent MUST explicitly call `view_file` on EVERY file listed below. Executing test suites without reading the command registry or anti-appeasement rules violates **AP-009 (Unread Context Execution)**.
+
 1. **Targeted Test Command Registry & Scripts**:
    - `skills/s7-testing/resources/test-commands.md` (Domain-Driven Targeted Testing commands across all supported tech stacks)
    - `commands/verify-stack.ps1` (Automated stack verification runner supporting `-Target` domain filtering)
@@ -45,8 +47,8 @@ The agent MUST explicitly internalize and enforce the following invariants durin
 
 ---
 
-## 4. The Three-Tier Verification Hierarchy
-Before passing to S8, the agent MUST execute the verification suite in a structured three-tier sequence. 
+## 4. The Four-Tier Verification Hierarchy
+Before passing to S8, the agent MUST execute the verification suite in a structured four-tier sequence. 
 If any tier fails, the agent MUST immediately stop, diagnose the failure, and return to S6 to remediate.
 
 ```text
@@ -61,8 +63,13 @@ If any tier fails, the agent MUST immediately stop, diagnose the failure, and re
 └──────────────────────┬───────────────────────┘
                        │ PASS
 ┌──────────────────────▼───────────────────────┐
-│ Tier 3: Domain-Driven Targeted Tests         │
+│ Tier 3A: Domain-Driven Targeted Tests        │
 │ (e.g., mvn test -Dtest=XTest, vitest path)   │
+└──────────────────────┬───────────────────────┘
+                       │ PASS
+┌──────────────────────▼───────────────────────┐
+│ Tier 3B: Mandatory Runtime Smoke Gate (S7-B) │
+│ (e.g., Context Load, Real Persistence Cycle) │
 └──────────────────────┬───────────────────────┘
                        │ PASS
                        ▼
@@ -72,14 +79,25 @@ If any tier fails, the agent MUST immediately stop, diagnose the failure, and re
 ### 4.1 Tier 1: Static Type Checking
 The agent MUST verify that the codebase compiles cleanly with strict type validation.
 Any unresolved type mismatch, broken import, or missing generic signature must be caught here.
+**Important Rule**: `npx tsc --noEmit` (or equivalent compiler check) is strictly Tier 1 Static Type Checking, **NOT** a test. Passing `tsc --noEmit` proves type compatibility only; it does not verify runtime execution, DOM rendering, or API interactions.
 
 ### 4.2 Tier 2: Linting & Code Hygiene
 The agent MUST run the project's configured linter to verify formatting standards, unused variables, and style adherence.
 Warnings treated as errors by the repository's configuration must be fixed before proceeding.
 
-### 4.3 Tier 3: Domain-Driven Targeted Automated Tests
-The agent MUST execute the targeted test suites covering the modified domain classes or components.
+### 4.3 Tier 3A: Domain-Driven Targeted Automated Tests
+The agent MUST execute targeted test suites covering the modified domain classes or components.
 If the active task added new functionality, corresponding automated tests for that functionality MUST be executed and verified green.
+
+### 4.4 Tier 3B: Mandatory Runtime Smoke Verification Gate (S7-B)
+Before submitting code to S8 peer review, the agent MUST execute the **S7-B Runtime Smoke Verification Gate**:
+- **The Mock-Only Prohibition**: Pure Mockito unit tests (`@ExtendWith(MockitoExtension.class)`) or mocked API calls alone **CANNOT** satisfy the S7 gate. Mocks hide runtime wiring mismatches, broken SQL queries, and context initialization failures.
+- **Backend (Spring Boot)**: Mandate executing a runtime smoke test annotated with `@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)` asserting that the `ApplicationContext` boots successfully and all bean dependencies wire cleanly without `UnsatisfiedDependencyException` or circular dependency failures.
+- **Backend (Python AI / FastAPI)**: Mandate executing an application lifespan / startup smoke test and DB model persistence cycle asserting async event loops and pool connections boot cleanly without errors.
+- **Backend (Rust / Axum / Tokio)**: Mandate Tokio runtime boot, router assembly, and database connection pool verification smoke tests.
+- **Database Persistence (Postgres Hibernate / Prisma / Mongo Redis)**: Mandate real persistence cycle smoke testing exercising an end-to-end create -> read -> delete -> read cycle against an embedded database, Testcontainers instance, or active test database.
+- **Frontend (Next.js / React)**: Mandate automated render/mount tests (using React Testing Library / Vitest) asserting that components mount without uncaught DOM exceptions and user interactions trigger the API client properly. Solo typechecking (`tsc --noEmit`) is strictly banned as a verification gate.
+- **Minecraft Fabric & NeoForge**: Mandate mod initializer execution and DeferredRegister / registry key binding smoke tests.
 
 ---
 
@@ -87,27 +105,29 @@ If the active task added new functionality, corresponding automated tests for th
 
 The agent MUST read `skills/s7-testing/resources/test-commands.md` and extract the target test command based on the touched task:
 
-| Stack | Tier 1 (Type/Compile) | Tier 2 (Lint) | Tier 3 Targeted Domain Test (Inner Loop) |
-| :--- | :--- | :--- | :--- |
-| **Java / Spring (Maven)** | `mvn test-compile` | `mvn checkstyle:check` | `mvn test -Dtest={Target}Test` |
-| **Java / Spring (Gradle)**| `.\gradlew.bat compileJava` | `.\gradlew.bat checkstyleMain` | `.\gradlew.bat test --tests "*{Target}Test*"` |
-| **Postgres + Hibernate** | `.\gradlew.bat compileJava` | `.\gradlew.bat checkstyleMain` | `.\gradlew.bat test --tests "*{Target}RepositoryTest*"` |
-| **Next.js / Vitest** | `npx tsc --noEmit` | `npm run lint` | `npx vitest run path/to/{Target}.test.ts` |
-| **Next.js / Jest** | `npx tsc --noEmit` | `npm run lint` | `npx jest path/to/{Target}.test.ts --bail` |
-| **Python / Pytest** | `python -m mypy .` | `ruff check .` | `pytest tests/unit/test_{target}.py -v` |
-| **Rust / Cargo** | `cargo check` | `cargo clippy -- -D warnings` | `cargo test {target}` |
-| **Minecraft Fabric** | `.\gradlew.bat build -x test`| `.\gradlew.bat check` | `.\gradlew.bat test --tests "*{Target}*"` |
-| **Minecraft NeoForge**| `.\gradlew.bat compileJava` | `.\gradlew.bat check` | `.\gradlew.bat test --tests "*{Target}*"` |
+| Stack | Tier 1 (Type/Compile) | Tier 2 (Lint) | Tier 3A Targeted Domain Test | Tier 3B Runtime Smoke Gate (S7-B) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Java / Spring (Maven)** | `mvn test-compile` | `mvn checkstyle:check` | `mvn test -Dtest={Target}Test` | `mvn test -Dtest=*SmokeTest*` |
+| **Java / Spring (Gradle)**| `.\gradlew.bat compileJava` | `.\gradlew.bat checkstyleMain` | `.\gradlew.bat test --tests "*{Target}Test*"` | `.\gradlew.bat test --tests "*SmokeTest*"` |
+| **Postgres + Hibernate** | `.\gradlew.bat compileJava` | `.\gradlew.bat checkstyleMain` | `.\gradlew.bat test --tests "*{Target}RepositoryTest*"` | `.\gradlew.bat test --tests "*PersistenceSmokeTest*"` |
+| **Postgres + Prisma** | `npx prisma validate` | `npx prisma format --check` | `npx prisma generate` | `npm test -- -t "prisma.smoke"` |
+| **MongoDB + Redis** | `npx tsc --noEmit` | `npm run lint` | `npm test -- --run` | `npm test -- -t "smoke"` |
+| **Next.js / Vitest** | `npx tsc --noEmit` | `npm run lint` | `npx vitest run path/to/{Target}.test.ts` | `npx vitest run src/**/smoke.test.ts*` |
+| **Next.js / Jest** | `npx tsc --noEmit` | `npm run lint` | `npx jest path/to/{Target}.test.ts --bail` | `npx jest --testPathPattern=smoke --bail` |
+| **Python / Pytest** | `python -m mypy .` | `ruff check .` | `pytest tests/unit/test_{target}.py -v` | `pytest tests/smoke/ -v` |
+| **Rust / Cargo** | `cargo check` | `cargo clippy -- -D warnings` | `cargo test {target}` | `cargo test --test smoke` |
+| **Minecraft Fabric** | `.\gradlew.bat build -x test`| `.\gradlew.bat check` | `.\gradlew.bat test --tests "*{Target}*"` | `.\gradlew.bat test --tests "*SmokeTest*"` |
+| **Minecraft NeoForge**| `.\gradlew.bat compileJava` | `.\gradlew.bat check` | `.\gradlew.bat test --tests "*{Target}*"` | `.\gradlew.bat test --tests "*SmokeTest*"` |
 
 ---
 
 ## 6. Failure Loopback Protocol (S7 → S6)
-If any command in Tiers 1–3 exits with a non-zero code or reports failures:
+If any command in Tiers 1–3B exits with a non-zero code or reports failures:
 1. **Log Failure Evidence**: Capture the specific file, line number, and error trace.
 2. **Halt Progression**: Under NO circumstances may the agent generate `submit(n).md` or invoke S8 reviewers.
 3. **Revert Task State**: In `.agents/session-[SHA]/task.md`, ensure the task remains marked as in-progress (`[/]`).
 4. **Transition to S6 Remediation**: Return to S6 Coding to fix the root cause of the error.
-5. **Re-Verification Gate**: Once fixed, the agent MUST re-run the targeted S7 suite from Tier 1 to Tier 3.
+5. **Re-Verification Gate**: Once fixed, the agent MUST re-run the targeted S7 suite from Tier 1 to Tier 3B.
 
 ---
 
@@ -120,7 +140,7 @@ When the workflow loops from S8 back to S9 Bug Fix due to reviewer `CHANGES_REQU
 
 ## 8. Completion Criteria
 The S7 phase is successfully completed when:
-1. All three verification tiers (Typecheck, Lint, Targeted Domain Test) exit with code 0.
+1. All four verification tiers (Typecheck, Lint, Targeted Domain Test, and S7-B Runtime Smoke Gate) exit with code 0.
 2. The agent has captured terminal output proving test execution.
 3. The S7 checkbox for the active task in `.agents/session-[SHA]/CHECKLIST.md` is marked complete (`[x]`).
 4. The workflow is ready to generate `submit(n).md` and invoke S8 reviewers.

@@ -19,7 +19,9 @@ The S4 phase explicitly determines whether the workflow advances to coding or lo
 
 ## 2. Mandatory Files to Read at this Step
 
-Before and during execution of S4, the agent MUST explicitly read:
+### Phase Step 0: Mandatory `view_file` Execution Gate
+Before creating `submit(0).md` or spawning any subagents, the orchestrating agent MUST explicitly invoke `view_file` on EVERY file listed below. Taking action without calling `view_file` violates **AP-009 (Unread Context Execution)**.
+
 1. **Plan Review Persona & Guidelines**:
    - `agents/plan-critic.md` (Persona definition for spawning plan-critic subagents)
    - `skills/s4-plan-review/resources/plan-review-guide.md` (Checklist, scoring criteria, and consensus gates)
@@ -52,9 +54,39 @@ The agent MUST immediately advance the workflow directly to the S6 Coding phase,
 ### 2.2 Standard Mode Protocol
 When operating in Standard Mode, the agent MUST execute the native, multi-agent review process within the current conversation context. 
 This protocol guarantees that the proposed plan is scrutinized by objective subagents dedicated solely to architectural compliance.
-The agent MUST prepare the `.agents/session-[SHA]/code-review/submit/submit(n).md` file containing the `plan.md` contents and the `plan-review-guide.md` instructions.
-The agent MUST spawn exactly two (2) plan-reviewer subagents utilizing the `plan-critic.md` persona defined in the persona bank.
-The agent MUST wait for both subagents to generate their respective `.agents/session-[SHA]/code-review/review/review(n).md` output files before proceeding to evaluation.
+
+#### Step 1: Write `submit(0).md`
+The agent MUST prepare `.agents/session-[SHA]/code-review/submit/submit(0).md` containing the full contents of `plan.md` and `task.md` following `resources/submit-template.md`.
+
+#### Step 2: ⛔ MAIN AGENT ZERO-WRITE INVARIANT (AP-010)
+- **THE MAIN AGENT MUST NEVER CALL `write_to_file` OR `replace_file_content` TO AUTHOR `review(1).md` OR `review(2).md`.**
+- Writing a review file as the main agent is a critical workflow failure that invalidates the session.
+- Review files MUST be authored exclusively by independent subagents spawned via `invoke_subagent`.
+
+#### Step 3: Spawn Reviewer Subagents via `invoke_subagent`
+The orchestrating agent MUST spawn exactly two (2) plan-reviewer subagents utilizing the `plan-critic` persona:
+```json
+invoke_subagent({
+  "Subagents": [
+    {
+      "TypeName": "plan-critic",
+      "Role": "Plan Architecture Critic 1",
+      "Prompt": "You are Plan Critic 1. Read .agents/session-[SHA]/code-review/submit/submit(0).md in full using view_file. Evaluate the plan against skills/s4-plan-review/resources/plan-review-guide.md. You MUST physically author your review report to .agents/session-[SHA]/code-review/review/review(1).md using the write_to_file tool. The main orchestrator is forbidden from authoring this file. Emit LGTM or CHANGES_REQUESTED with line-level findings."
+    },
+    {
+      "TypeName": "plan-critic",
+      "Role": "Plan Architecture Critic 2",
+      "Prompt": "You are Plan Critic 2. Read .agents/session-[SHA]/code-review/submit/submit(0).md in full using view_file. Evaluate the plan against skills/s4-plan-review/resources/plan-review-guide.md. You MUST physically author your review report to .agents/session-[SHA]/code-review/review/review(2).md using the write_to_file tool. The main orchestrator is forbidden from authoring this file. Emit LGTM or CHANGES_REQUESTED with line-level findings."
+    }
+  ]
+})
+```
+
+#### Step 4: Reactive Wait Gate (No Tool Loop)
+After calling `invoke_subagent`:
+1. The main orchestrator MUST immediately STOP calling tools. Do NOT poll or loop.
+2. Antigravity will automatically resume execution when the subagents report completion.
+3. Upon wakeup, the main agent MUST call `view_file` on `.agents/session-[SHA]/code-review/review/review(1).md` and `review(2).md` to ingest their verdicts.
 
 ### 2.3 Duolithic Mode Protocol
 When operating in Duolithic Mode, the orchestrating M-Agent MUST delegate the entire review process to the R-Agent operating in a parallel conversation. 
@@ -84,9 +116,11 @@ The agent MUST select the first incomplete task from the `task.md` file and begi
 The agent MUST ensure the `task.md` file is accurately updated as the coding phase commences.
 The agent MUST NOT modify the approved `plan.md` file after this transition occurs.
 
-### 3.2 Rejection Transition (S5 Plan Fix)
+### 3.2 Rejection Transition (S5 Plan Fix & 2-Round Circuit Breaker)
 If any single plan-reviewer subagent requests changes or rejects the proposed architecture, the plan is considered flawed. 
-The orchestrating agent MUST explicitly transition the workflow to the S5 Plan Fix phase to remediate the identified issues.
-The agent MUST read the specific criticisms from the `review(n).md` files, revise the `plan.md` and `task.md` artifacts accordingly, and loop back to the beginning of S4 to request a fresh review cycle.
-This cyclical process MUST continue indefinitely until all architectural concerns are fully resolved.
-The agent MUST NOT proceed to S6 until a flawless approval is secured from all designated reviewers.
+The review rejection loop is strictly governed by a **Two-Round Circuit Breaker**:
+- **Round 1 Rejection**: The orchestrating agent MUST transition to S5 Plan Fix to methodically resolve criticisms, revise `plan.md` and `task.md`, author `submit(1).md`, and resubmit for Round 2 review.
+- **Round 2 Rejection (Circuit Breaker Tripped)**: If any reviewer still requests changes on Round 2, open-ended re-review loops are strictly FORBIDDEN. The reviewer MUST EITHER:
+  1. Provide the exact drop-in revision diff in `review(n).md` required to secure immediate `LGTM`, which the orchestrating agent applies in S5 before proceeding to S6; OR
+  2. Escalate the architectural impasse directly to the human operator (`CIRCUIT_BREAKER_TRIPPED`), pausing autonomous execution for user decision.
+Under NO circumstances may plan review loops proceed beyond 2 cycles without human operator authorization.

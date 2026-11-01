@@ -8,7 +8,7 @@ Copy the block into your chat prompt, select your **Mode**, describe your **Task
 ## 📋 Copyable Workflow Invocation Prompt
 
 ```markdown
-# INVOKE: ideal-agentic-workflow (v1.2.0)
+# INVOKE: ideal-agentic-workflow (v1.3.1)
 
 ## 1. Operating Mode (Select exactly one)
 - [x] **Standard** — Full S1–S11 lifecycle. Rigorous multi-agent engineering. (Default)
@@ -90,12 +90,14 @@ flowchart TD
   - Session Cleanup: `pwsh -File commands/clean-session.ps1`.
 
 ## 5. Non-Negotiable Invariants
-1. Read `GEMINI.md` before touching any source file.
-2. Quarantine all session state in `.agents/session-[SHA]/`.
-3. Code exactly ONE task per S6->S7->S8 cycle.
-4. Stage files explicitly per-file — never run `git add .` (AP-005).
-5. Unanimous LGTM required for plan (S4) and code (S8).
-6. Evidence before assertions: run actual test commands before claiming success.
+1. **Mandatory First Action Invariant (Phase Step 0 Read Gate / AP-009)**: On entering ANY phase (S0–S11), the orchestrating agent MUST explicitly call `view_file` ONCE on all mandatory phase files for that phase transition BEFORE executing any action tool (`run_command`, `write_to_file`, `replace_file_content`, `invoke_subagent`). Active context is cached in working memory throughout the phase, eliminating turn-by-turn re-reading.
+2. **Zero Self-Review Invariant (AP-010)**: The main orchestrating agent is strictly prohibited from authoring `review(n).md` or `audit(n).md` files using `write_to_file` or `replace_file_content`. Reviews (S4, S8) and audits (S2) MUST be delegated to independent subagents via `invoke_subagent`. The main agent is read-only for `code-review/review/` and `audit/bin/`.
+3. Read `GEMINI.md` in full before touching any source file.
+4. Quarantine all session state in `.agents/session-[SHA]/`.
+5. Code exactly ONE task per S6->S7->S8 cycle.
+6. Stage files using AP-005 scope-aware staging (Mode A: per-file, ~50-150 LOC; Mode B: -Scaffold for >= 15 cohesive files with manifest) — never run blind `git add .` (AP-005).
+7. Unanimous LGTM required for plan (S4) and code (S8).
+8. Evidence before assertions: run actual test commands before claiming success.
 
 ---
 **Directive**: Acknowledge mode and active stack, initialize `.agents/session-[SHA]/`, and begin S1.

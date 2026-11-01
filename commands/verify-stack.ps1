@@ -8,14 +8,17 @@
     The identifier of the technology stack pack (e.g. 'web-nextjs-turborepo', 'web-backend-java-spring', 'database-postgres-hibernate-flyway', 'web-backend-python-ai', 'web-backend-rust').
 .PARAMETER Target
     Optional targeted test path or test class (e.g. 'src/services/order.test.ts').
+.PARAMETER Smoke
+    Optional switch to execute Tier 3B Runtime Smoke Verification Gate (Spring Boot context load, persistence cycle, cache round-trip).
 .EXAMPLE
     pwsh -File .\commands\verify-stack.ps1 -Stack web-nextjs-turborepo
-    pwsh -File .\commands\verify-stack.ps1 -Stack database-postgres-hibernate-flyway
+    pwsh -File .\commands\verify-stack.ps1 -Stack database-postgres-hibernate-flyway -Smoke
 #>
 
 param (
     [string]$Stack,
-    [string]$Target
+    [string]$Target,
+    [switch]$Smoke
 )
 
 Set-StrictMode -Version Latest
@@ -85,9 +88,12 @@ switch ($Stack) {
         Run-CommandSafely "Tier 1: TypeScript Check" "npx tsc --noEmit"
         Run-CommandSafely "Tier 2: Lint Check" "npm run lint"
         if ($Target) {
-            Run-CommandSafely "Tier 3: Targeted Test" "npx vitest run $Target"
+            Run-CommandSafely "Tier 3A: Targeted Test" "npx vitest run $Target"
         } else {
-            Run-CommandSafely "Tier 3: Test Suite" "npm test -- --run"
+            Run-CommandSafely "Tier 3A: Test Suite" "npm test -- --run"
+        }
+        if ($Smoke) {
+            Run-CommandSafely "Tier 3B: Component Mount & Smoke Gate" "npx vitest run src/**/smoke.test.ts*"
         }
     }
     "database-postgres-hibernate-flyway" {
@@ -96,17 +102,23 @@ switch ($Stack) {
             Run-CommandSafely "Tier 1: Flyway Info" "mvn flyway:info"
             Run-CommandSafely "Tier 2: Compile & Metamodel" "mvn test-compile"
             if ($Target) {
-                Run-CommandSafely "Tier 3: Targeted Test" "mvn test -Dtest=$Target"
+                Run-CommandSafely "Tier 3A: Targeted Test" "mvn test -Dtest=$Target"
             } else {
-                Run-CommandSafely "Tier 3: Test Suite" "mvn test"
+                Run-CommandSafely "Tier 3A: Test Suite" "mvn test"
+            }
+            if ($Smoke) {
+                Run-CommandSafely "Tier 3B: Persistence Smoke Gate (Real DB Cycle)" "mvn test -Dtest=*PersistenceSmokeTest*,*SmokeTest*"
             }
         } else {
             Run-CommandSafely "Tier 1: Flyway Info" "$gradleCmd flywayInfo"
             Run-CommandSafely "Tier 2: Compile & Metamodel" "$gradleCmd compileJava"
             if ($Target) {
-                Run-CommandSafely "Tier 3: Targeted Test" "$gradleCmd test --tests `"*$Target*`""
+                Run-CommandSafely "Tier 3A: Targeted Test" "$gradleCmd test --tests `"*$Target*`""
             } else {
-                Run-CommandSafely "Tier 3: Test Suite" "$gradleCmd test"
+                Run-CommandSafely "Tier 3A: Test Suite" "$gradleCmd test"
+            }
+            if ($Smoke) {
+                Run-CommandSafely "Tier 3B: Persistence Smoke Gate (Real DB Cycle)" "$gradleCmd test --tests `"*PersistenceSmokeTest*`" --tests `"*SmokeTest*`""
             }
         }
     }
@@ -116,17 +128,23 @@ switch ($Stack) {
             Run-CommandSafely "Tier 1: Compile" "mvn compile"
             Run-CommandSafely "Tier 2: Checkstyle" "mvn checkstyle:check"
             if ($Target) {
-                Run-CommandSafely "Tier 3: Targeted Test" "mvn test -Dtest=$Target"
+                Run-CommandSafely "Tier 3A: Targeted Test" "mvn test -Dtest=$Target"
             } else {
-                Run-CommandSafely "Tier 3: Test Suite" "mvn test"
+                Run-CommandSafely "Tier 3A: Test Suite" "mvn test"
+            }
+            if ($Smoke) {
+                Run-CommandSafely "Tier 3B: Runtime Smoke Gate (Context Load)" "mvn test -Dtest=*SmokeTest*"
             }
         } else {
             Run-CommandSafely "Tier 1: Compile" "$gradleCmd compileJava"
             Run-CommandSafely "Tier 2: Checkstyle" "$gradleCmd checkstyleMain"
             if ($Target) {
-                Run-CommandSafely "Tier 3: Targeted Test" "$gradleCmd test --tests `"*$Target*`""
+                Run-CommandSafely "Tier 3A: Targeted Test" "$gradleCmd test --tests `"*$Target*`""
             } else {
-                Run-CommandSafely "Tier 3: Test Suite" "$gradleCmd test"
+                Run-CommandSafely "Tier 3A: Test Suite" "$gradleCmd test"
+            }
+            if ($Smoke) {
+                Run-CommandSafely "Tier 3B: Runtime Smoke Gate (Context Load)" "$gradleCmd test --tests `"*SmokeTest*`""
             }
         }
     }
@@ -134,46 +152,75 @@ switch ($Stack) {
         Run-CommandSafely "Tier 1: Type Check (mypy)" "python -m mypy ."
         Run-CommandSafely "Tier 2: Linter (ruff)" "ruff check ."
         if ($Target) {
-            Run-CommandSafely "Tier 3: Targeted Test" "pytest $Target"
+            Run-CommandSafely "Tier 3A: Targeted Test" "pytest $Target"
         } else {
-            Run-CommandSafely "Tier 3: Test Suite" "pytest"
+            Run-CommandSafely "Tier 3A: Test Suite" "pytest"
+        }
+        if ($Smoke) {
+            Run-CommandSafely "Tier 3B: Lifespan & Persistence Smoke Gate" "pytest tests/smoke/ -v"
         }
     }
     "web-backend-rust" {
         Run-CommandSafely "Tier 1: Cargo Check" "cargo check"
         Run-CommandSafely "Tier 2: Clippy" "cargo clippy -- -D warnings"
         if ($Target) {
-            Run-CommandSafely "Tier 3: Targeted Test" "cargo test $Target"
+            Run-CommandSafely "Tier 3A: Targeted Test" "cargo test $Target"
         } else {
-            Run-CommandSafely "Tier 3: Test Suite" "cargo test"
+            Run-CommandSafely "Tier 3A: Test Suite" "cargo test"
+        }
+        if ($Smoke) {
+            Run-CommandSafely "Tier 3B: Tokio Boot & Router Smoke Gate" "cargo test --test smoke"
         }
     }
     "database-postgres-prisma" {
         Run-CommandSafely "Tier 1: Prisma Validate" "npx prisma validate"
         Run-CommandSafely "Tier 2: Prisma Format Check" "npx prisma format --check"
-        Run-CommandSafely "Tier 3: Prisma Generate" "npx prisma generate"
+        Run-CommandSafely "Tier 3A: Prisma Generate" "npx prisma generate"
+        if ($Smoke) {
+            Run-CommandSafely "Tier 3B: Prisma CRUD Smoke Gate" "npm test -- -t `"prisma.smoke`""
+        }
     }
     "database-mongo-redis" {
         Run-CommandSafely "Tier 1: TypeScript Check" "npx tsc --noEmit"
         Run-CommandSafely "Tier 2: Lint Check" "npm run lint"
-        Run-CommandSafely "Tier 3: Integration Tests" "npm test -- --run"
+        Run-CommandSafely "Tier 3A: Integration Tests" "npm test -- --run"
+        if ($Smoke) {
+            Run-CommandSafely "Tier 3B: Persistence & Cache Smoke Gate" "npm test -- -t `"smoke`""
+        }
     }
     "mc-fabric" {
         $gradleCmd = if ($isWindows) { ".\gradlew.bat" } else { "./gradlew" }
         Run-CommandSafely "Tier 1: Loom Build" "$gradleCmd build -x test"
         Run-CommandSafely "Tier 2: Check" "$gradleCmd check"
-        Run-CommandSafely "Tier 3: Test Suite" "$gradleCmd test"
+        if ($Target) {
+            Run-CommandSafely "Tier 3A: Targeted Test" "$gradleCmd test --tests `"*$Target*`""
+        } else {
+            Run-CommandSafely "Tier 3A: Test Suite" "$gradleCmd test"
+        }
+        if ($Smoke) {
+            Run-CommandSafely "Tier 3B: Mod Initializer Smoke Gate" "$gradleCmd test --tests `"*SmokeTest*`""
+        }
     }
     "mc-neoforge" {
         $gradleCmd = if ($isWindows) { ".\gradlew.bat" } else { "./gradlew" }
         Run-CommandSafely "Tier 1: Compile" "$gradleCmd compileJava"
         Run-CommandSafely "Tier 2: Check" "$gradleCmd check"
-        Run-CommandSafely "Tier 3: Test Suite" "$gradleCmd test"
+        if ($Target) {
+            Run-CommandSafely "Tier 3A: Targeted Test" "$gradleCmd test --tests `"*$Target*`""
+        } else {
+            Run-CommandSafely "Tier 3A: Test Suite" "$gradleCmd test"
+        }
+        if ($Smoke) {
+            Run-CommandSafely "Tier 3B: Mod Bus & DeferredRegister Smoke Gate" "$gradleCmd test --tests `"*SmokeTest*`""
+        }
     }
     default {
         Run-CommandSafely "Tier 1: TypeScript Check" "npx tsc --noEmit"
         Run-CommandSafely "Tier 2: Lint Check" "npm run lint"
-        Run-CommandSafely "Tier 3: Test Suite" "npm test"
+        Run-CommandSafely "Tier 3A: Test Suite" "npm test"
+        if ($Smoke) {
+            Run-CommandSafely "Tier 3B: Runtime Smoke Gate" "npm test -- -t `"smoke`""
+        }
     }
 }
 

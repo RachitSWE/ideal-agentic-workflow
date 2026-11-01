@@ -26,6 +26,7 @@ When the detected project type in `context.md` is Web / Fullstack, map the task'
 | Task Type Tag / Stack | Primary Reviewer (Required) | Secondary Specialist (Stack Specific) | Tertiary (If Fullstack / 3 Reviewers) | Focus Areas |
 | :--- | :--- | :--- | :--- | :--- |
 | `[frontend]` (Next.js) | `agents/fullstack-implementation-reviewer.md` | `agents/nextjs-turborepo-reviewer.md` | `agents/fullstack-uiux-cro-auditor.md` | RSC boundaries, Server Actions, accessibility, hydration errors, bundle size. |
+| `[frontend]` (Angular) | `agents/fullstack-implementation-reviewer.md` | `agents/fullstack-implementation-reviewer.md` | `agents/fullstack-uiux-cro-auditor.md` | Signals architecture, Zoneless change detection, standalone components, takeUntilDestroyed. |
 | `[backend]` (Spring Boot) | `agents/fullstack-implementation-reviewer.md` | `agents/spring-boot-reviewer.md` | `agents/fullstack-security-reviewer.md` | Transaction boundaries, DTO mapping, SecurityFilterChain, @RestControllerAdvice. |
 | `[backend]` (Python AI) | `agents/fullstack-implementation-reviewer.md` | `agents/python-ai-reviewer.md` | `agents/fullstack-security-reviewer.md` | Async event loop non-blocking, vector dimension parity, Pydantic v2, pinned deps. |
 | `[backend]` (Rust) | `agents/fullstack-implementation-reviewer.md` | `agents/rust-systems-reviewer.md` | `agents/fullstack-architecture-auditor.md` | Tokio async hygiene, zero unwrap/expect, thiserror/anyhow, lock contention. |
