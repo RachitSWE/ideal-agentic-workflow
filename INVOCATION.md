@@ -8,7 +8,7 @@ Copy the block into your chat prompt, select your **Mode**, describe your **Task
 ## 📋 Copyable Workflow Invocation Prompt
 
 ```markdown
-# INVOKE: ideal-agentic-workflow (v1.3.1)
+# INVOKE: ideal-agentic-workflow (v1.3.2)
 
 ## 1. Operating Mode (Select exactly one)
 - [x] **Standard** — Full S1–S11 lifecycle. Rigorous multi-agent engineering. (Default)

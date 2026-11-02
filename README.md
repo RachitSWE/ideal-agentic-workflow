@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![Version](https://img.shields.io/badge/version-1.3.1-blue.svg)](plugin.json)
+[![Version](https://img.shields.io/badge/version-1.3.2-blue.svg)](plugin.json)
 [![Author](https://img.shields.io/badge/author-RachitSWE-green.svg)](https://github.com/RachitSWE)
 [![Platform](https://img.shields.io/badge/platform-Google%20Antigravity-orange.svg)](https://antigravity.google)
 [![Verification Suite](https://img.shields.io/badge/verification-7%2F7%20passing-brightgreen.svg)](scripts/verify-file-citations.js)
@@ -146,7 +146,8 @@ All subagents conform to the Antigravity specification in [`agents/`](agents/):
 - [`agents/mc-mod-compatibility-auditor.md`](agents/mc-mod-compatibility-auditor.md): Detects Mixin collisions and registry conflicts.
 
 ### 3. S6 Framework Specialist Personas
-- [`agents/nextjs-turborepo-specialist.md`](agents/nextjs-turborepo-specialist.md): Next.js 15, Turborepo, RSC boundaries, Server Actions.
+- [`agents/nextjs-turborepo-specialist.md`](agents/nextjs-turborepo-specialist.md): Next.js 16, Turborepo, RSC boundaries, Server Actions.
+- [`agents/angular-signals-specialist.md`](agents/angular-signals-specialist.md): Angular 21+ LTS, Signals reactivity, Zoneless change detection, Standalone components.
 - [`agents/spring-boot-specialist.md`](agents/spring-boot-specialist.md): Java Spring Boot 3+, Spring Security, Transactions, Data JPA.
 - [`agents/python-ai-specialist.md`](agents/python-ai-specialist.md): Python, FastAPI, LangChain, PyTorch, RAG Pipelines.
 - [`agents/rust-systems-specialist.md`](agents/rust-systems-specialist.md): Rust, Tokio async, Axum, Serde, memory safety.
@@ -159,6 +160,7 @@ All subagents conform to the Antigravity specification in [`agents/`](agents/):
 - [`agents/fullstack-implementation-reviewer.md`](agents/fullstack-implementation-reviewer.md): Primary implementation reviewer evaluating AP-001 through AP-004.
 - [`agents/postgres-hibernate-flyway-reviewer.md`](agents/postgres-hibernate-flyway-reviewer.md): Enforces Flyway immutability, `ddl-auto=validate`, sequence keys, and disabled OSIV.
 - [`agents/nextjs-turborepo-reviewer.md`](agents/nextjs-turborepo-reviewer.md): Enforces App Router RSC boundaries, Server Actions, and client bundle limits.
+- [`agents/angular-signals-reviewer.md`](agents/angular-signals-reviewer.md): Enforces Signals purity, Zoneless change detection, Standalone boundaries, and WCAG 2.2 AA.
 - [`agents/spring-boot-reviewer.md`](agents/spring-boot-reviewer.md): Enforces transaction boundaries, DTO mapping, SecurityFilterChain, and RFC 7807.
 - [`agents/python-ai-reviewer.md`](agents/python-ai-reviewer.md): Enforces non-blocking event loops, vector parity, Pydantic v2, and pinned versions.
 - [`agents/rust-systems-reviewer.md`](agents/rust-systems-reviewer.md): Enforces Tokio async hygiene, zero unwrap/expect in production, and lock safety.
@@ -210,12 +212,21 @@ All agents, auditors, and reviewers actively detect and reject violations of the
 
 ---
 
-## 🛠 Automation Commands
+## 🛠 Automation Commands & Quickstart
 
+### ⚡ Instant Session Bootstrapper
+To bootstrap an autonomous session with automatic tech stack detection and pre-configured reviewer assignment:
+
+```powershell
+pwsh scripts/start-session.ps1 -Mode standard
+```
+
+### Automation Commands
 Cross-platform PowerShell automation scripts located in [`commands/`](commands/):
 
 | Script | Purpose & Capabilities |
 | :--- | :--- |
+| [`scripts/start-session.ps1`](scripts/start-session.ps1) | Auto-detects tech stack markers, allocates S8 reviewers, and bootstraps `.agents/session-[SHA]/`. |
 | [`commands/init-session.ps1`](commands/init-session.ps1) | Scaffolds `.agents/session-[SHA]/` directory tree, stubs, and checklist in milliseconds. |
 | [`commands/init-spec-session.ps1`](commands/init-spec-session.ps1) | Scaffolds `.agents/specs/session-[SHA]/` for the Spec Architecture Pipeline. |
 | [`commands/verify-stack.ps1`](commands/verify-stack.ps1) | Executes multi-tier verification (typecheck, lint, targeted unit tests) with `-Target <Class>` support. |

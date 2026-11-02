@@ -90,13 +90,14 @@ The agent MUST execute targeted test suites covering the modified domain classes
 If the active task added new functionality, corresponding automated tests for that functionality MUST be executed and verified green.
 
 ### 4.4 Tier 3B: Mandatory Runtime Smoke Verification Gate (S7-B)
-Before submitting code to S8 peer review, the agent MUST execute the **S7-B Runtime Smoke Verification Gate**:
+Before submitting code to S8 peer review, the agent MUST execute the **S7-B Runtime Smoke Verification Gate**. If the target project lacks a runtime smoke test, the agent MUST adapt a pre-baked smoke template from `resources/smoke-templates/`:
 - **The Mock-Only Prohibition**: Pure Mockito unit tests (`@ExtendWith(MockitoExtension.class)`) or mocked API calls alone **CANNOT** satisfy the S7 gate. Mocks hide runtime wiring mismatches, broken SQL queries, and context initialization failures.
-- **Backend (Spring Boot)**: Mandate executing a runtime smoke test annotated with `@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)` asserting that the `ApplicationContext` boots successfully and all bean dependencies wire cleanly without `UnsatisfiedDependencyException` or circular dependency failures.
-- **Backend (Python AI / FastAPI)**: Mandate executing an application lifespan / startup smoke test and DB model persistence cycle asserting async event loops and pool connections boot cleanly without errors.
-- **Backend (Rust / Axum / Tokio)**: Mandate Tokio runtime boot, router assembly, and database connection pool verification smoke tests.
+- **Backend (Spring Boot)**: Adapt `resources/smoke-templates/springboot-smoke.java`. Mandate executing a runtime smoke test annotated with `@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)` asserting that the `ApplicationContext` boots successfully and all bean dependencies wire cleanly without `UnsatisfiedDependencyException` or circular dependency failures.
+- **Backend (Python AI / FastAPI)**: Adapt `resources/smoke-templates/fastapi-lifespan-smoke.py`. Mandate executing an application lifespan / startup smoke test and DB model persistence cycle asserting async event loops and pool connections boot cleanly without errors.
+- **Backend (Rust / Axum / Tokio)**: Adapt `resources/smoke-templates/rust-axum-smoke.rs`. Mandate Tokio runtime boot, router assembly, and database connection pool verification smoke tests against an ephemeral socket (`127.0.0.1:0`).
 - **Database Persistence (Postgres Hibernate / Prisma / Mongo Redis)**: Mandate real persistence cycle smoke testing exercising an end-to-end create -> read -> delete -> read cycle against an embedded database, Testcontainers instance, or active test database.
-- **Frontend (Next.js / React)**: Mandate automated render/mount tests (using React Testing Library / Vitest) asserting that components mount without uncaught DOM exceptions and user interactions trigger the API client properly. Solo typechecking (`tsc --noEmit`) is strictly banned as a verification gate.
+- **Frontend (Next.js / React)**: Adapt `resources/smoke-templates/nextjs-smoke.spec.ts`. Mandate automated render/mount tests (using React Testing Library / Vitest) asserting that components mount without uncaught DOM exceptions and user interactions trigger the API client properly. Solo typechecking (`tsc --noEmit`) is strictly banned as a verification gate.
+- **Frontend (Angular)**: Adapt `resources/smoke-templates/angular-smoke.spec.ts`. Mandate standalone component mounting under zoneless change detection and router outlet verification.
 - **Minecraft Fabric & NeoForge**: Mandate mod initializer execution and DeferredRegister / registry key binding smoke tests.
 
 ---

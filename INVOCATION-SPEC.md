@@ -8,7 +8,7 @@ This pipeline conducts a deep 10–12 question system design interview (`/grill-
 ## 📋 Copyable Spec Invocation Prompt
 
 ```markdown
-# INVOKE: spec-architect-pipeline (v1.3.1)
+# INVOKE: spec-architect-pipeline (v1.3.2)
 
 ## 1. Feature Brief & High-Level Intent
 - **Feature Name**: [INSERT KEBAB-CASE NAME, e.g. transaction-history]
@@ -67,7 +67,7 @@ Once SP6 completes, the certified spec is isolated in `.agents/specs/session-[SH
 To implement the feature, simply invoke the master S1–S11 workflow:
 
 ```markdown
-# INVOKE: ideal-agentic-workflow (v1.3.1)
+# INVOKE: ideal-agentic-workflow (v1.3.2)
 
 ## 1. Operating Mode
 - [x] **Standard**
