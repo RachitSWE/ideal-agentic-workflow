@@ -1,0 +1,15 @@
+# Node & build
+node_modules/
+dist/
+build/
+
+# IDE & OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Agent session artifacts & temp
+.agents/
+.superpowers/
+*.log
