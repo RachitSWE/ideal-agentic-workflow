@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![Version](https://img.shields.io/badge/version-1.3.2-blue.svg)](plugin.json)
+[![Version](https://img.shields.io/badge/version-1.3.3-blue.svg)](plugin.json)
 [![Author](https://img.shields.io/badge/author-RachitSWE-green.svg)](https://github.com/RachitSWE)
 [![Platform](https://img.shields.io/badge/platform-Google%20Antigravity-orange.svg)](https://antigravity.google)
 [![Verification Suite](https://img.shields.io/badge/verification-7%2F7%20passing-brightgreen.svg)](scripts/verify-file-citations.js)
@@ -186,7 +186,8 @@ Each supported ecosystem provides paired stack pack specifications ([`resources/
 | **Python Databases (SQLAlchemy, Motor)** | [`backend/python-databases.md`](resources/stacks/backend/python-databases.md) | [`rules-backend-python-databases.md`](rules/rules-backend-python-databases.md) |
 | **Rust Backend (Axum & Tokio)** | [`backend/backend-rust.md`](resources/stacks/backend/backend-rust.md) | [`rules-backend-rust.md`](rules/rules-backend-rust.md) |
 | **Rust Databases (SQLx, Mongo, Redis)** | [`backend/rust-databases.md`](resources/stacks/backend/rust-databases.md) | [`rules-backend-rust-databases.md`](rules/rules-backend-rust-databases.md) |
-| **Next.js & React 19** | [`frontend/nextjs.md`](resources/stacks/frontend/nextjs.md) | [`rules-frontend-nextjs.md`](rules/rules-frontend-nextjs.md) |
+| **Next.js & React 19 (App Router)** | [`frontend/nextjs.md`](resources/stacks/frontend/nextjs.md) | [`rules-frontend-nextjs.md`](rules/rules-frontend-nextjs.md) |
+| **Next.js (Pages Router)** | [`frontend/nextjs-pages.md`](resources/stacks/frontend/nextjs-pages.md) | [`rules-frontend-nextjs-pages.md`](rules/rules-frontend-nextjs-pages.md) |
 | **Angular 20/21 LTS (Signals & Zoneless)** | [`frontend/angular.md`](resources/stacks/frontend/angular.md) | [`rules-frontend-angular.md`](rules/rules-frontend-angular.md) |
 | **Minecraft Fabric** | [`minecraft/mc-fabric.md`](resources/stacks/minecraft/mc-fabric.md) | [`rules-minecraft-fabric.md`](rules/rules-minecraft-fabric.md) |
 | **Minecraft NeoForge / Forge** | [`minecraft/mc-forge.md`](resources/stacks/minecraft/mc-forge.md) | [`rules-minecraft-forge.md`](rules/rules-minecraft-forge.md) |

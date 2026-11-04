@@ -1,4 +1,4 @@
-# INVOKE: spec-architect-pipeline (v1.3.2)
+# INVOKE: spec-architect-pipeline (v1.3.3)
 
 ## 1. Feature Brief & High-Level Intent
 - **Feature Name**: [INSERT KEBAB-CASE NAME, e.g. transaction-history]
