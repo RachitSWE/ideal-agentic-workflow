@@ -100,6 +100,12 @@ Before submitting code to S8 peer review, the agent MUST execute the **S7-B Runt
 - **Frontend (Angular)**: Adapt `resources/smoke-templates/angular-smoke.spec.ts`. Mandate standalone component mounting under zoneless change detection and router outlet verification.
 - **Minecraft Fabric & NeoForge**: Mandate mod initializer execution and DeferredRegister / registry key binding smoke tests.
 
+### 4.5 Tier 3C: Mandatory Temporal State & Polling Lifecycle Verification Gate (S7-C)
+Before proceeding to S8 Code Review, if any touched frontend component executes recurring asynchronous data fetches (`setInterval`, polling, SWR, React Query, WebSocket listeners), the agent MUST execute automated temporal lifecycle tests:
+1. **Dirty-State Preservation Assertion**: Using fake timers (e.g. `vi.useFakeTimers()`), simulate user form input (`isDirty = true`), advance timers across $\ge 2$ full polling cycles (e.g. `vi.advanceTimersByTime(10000)`), and assert that user uncommitted input text is NOT clobbered or reset by incoming background payloads.
+2. **Teardown & Unmount Assertion**: Assert that all intervals, timers, and event listeners disconnect cleanly upon unmount without uncaught state update warnings on unmounted components.
+Components failing to preserve dirty state during polling intervals MUST NOT be submitted to S8 Code Review.
+
 ---
 
 ## 5. Test Command Execution Protocol by Stack

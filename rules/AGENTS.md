@@ -24,8 +24,8 @@ Any violation breaks the fundamental integrity of the workflow and voids session
 Auditors (S2) and Reviewers (S4, S8) MUST actively detect and reject any code or session artifact displaying these anti-patterns:
 
 ### AP-001: Simulation & Mock Code in Production
-- **Violation**: Inserting mock return values, dummy JSON payloads, simulated delays (`setTimeout`, `sleep`), or placeholder returns (`return true; // placeholder`) into production paths.
-- **Rule**: Every production code path MUST be fully implemented, connecting to real database queries, APIs, and business rules. Mocks belong strictly inside test suites.
+- **Violation**: Inserting mock return values, dummy JSON payloads, simulated delays (`setTimeout`, `sleep`), placeholder returns (`return true; // placeholder`), or disguising in-memory stub mutations under "Local Demo" / "Preview" badges in production views.
+- **Rule**: Every production code path MUST be fully implemented, connecting to real database queries, APIs, and business rules. Mocks belong strictly inside test suites. "Local Demo" escape hatches in production paths are strictly forbidden.
 
 ### AP-002: Conversational & Vibe Comments
 - **Violation**: Polluting source files with conversational AI commentary such as `// Added as per task requirements`, `// Modified to fix null pointer`, or `// Antigravity agent implementation`.
@@ -162,4 +162,8 @@ All agents, auditors (S2), and reviewers (S4, S8) MUST enforce these universal a
 13. **Migration-First Schema Authority (`ddl-auto: validate`)**: Production relational schemas must be governed exclusively by immutable, numbered migration scripts. ORM automatic schema mutation in production is strictly forbidden.
 14. **Document TTL Lifecycle & Redis Sliding-Window Rate Limiting**: Ephemeral document collections must declare automated TTL indexes. Redis keys must follow hierarchical namespacing with mandatory TTL expirations, and high-throughput throttlers must use atomic Lua sliding-window sorted sets.
 15. **Mandatory Runtime Bootstrap & Smoke Gate (S7-B Gate)**: Unit tests with mocks alone cannot certify release readiness. Changes modifying beans, entities, routes, or UI components must pass automated runtime smoke tests (e.g. `@SpringBootTest`, Playwright browser tests, Testcontainers persistence cycles) before peer review sign-off.
+16. **Closed Vertical Slices & Local Demo Prohibition**: Every UI control that mutates state MUST connect to a concrete network client, API endpoint, or database operation. Disguising simulated in-memory state under "Local Demo" or "Preview" badges in production views violates AP-001 and is strictly prohibited.
+17. **State Lineage & Layout Boundary Infrastructure**: Scope isolation is defined by state lineage, not isolated leaf files. When a feature produces or consumes state displayed in shared layout shells (Header, Sidebar, Navigation, Status Bar), updating the shared context provider or layout shell is mandatory state infrastructure and is explicitly excluded from scope-creep restrictions.
+18. **Temporal Lifecycle & Polling Mutation Immunity**: Components with recurring asynchronous fetches (polling, SWR, React Query, WebSockets) MUST be tested with simulated timers across $\ge 2$ intervals while `isDirty = true` to prove in-flight user input is never clobbered by incoming background payloads. Unmount interval cleanup must be verified.
+19. **Objective Production Polish & Anti-Slop Standards**: Reviewers must reject raw technical diagnostic strings (`x64`, `Node v\d+`, `localhost:\d+`, unhandled errors) in user-facing layouts, reject cartoonish novelty geometry (zigzag SVGs, spiky decorative clip-paths) not in the design system, and require 3-layer theming depth (Surface Base, Text Contrast, and Atmospheric Backdrop).
 

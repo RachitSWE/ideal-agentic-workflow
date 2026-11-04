@@ -49,7 +49,8 @@ Before touching ANY source file, running commands, or creating classes, the orch
    - **Stack Composer & Extensibility**:
      - `resources/stacks/_stack-composer.md`
 4. **Specialist Subagent Personas** (Adopt or consult based on the detected stack and active task):
-   - `agents/nextjs-turborepo-specialist.md` (Next.js 15, Turborepo, RSC boundaries, Server Actions)
+   - `agents/nextjs-turborepo-specialist.md` (Next.js 16, Turborepo, RSC boundaries, Server Actions)
+   - `agents/angular-signals-specialist.md` (Angular 21+, Signals reactivity, Zoneless, Standalone)
    - `agents/spring-boot-specialist.md` (Java Spring Boot, Security, Transactions, Data JPA)
    - `agents/python-ai-specialist.md` (Python, FastAPI, LangChain, PyTorch, RAG Pipelines)
    - `agents/rust-systems-specialist.md` (Rust, Tokio async, Axum, Serde, memory safety)
@@ -79,7 +80,9 @@ Before writing code, the agent MUST explicitly instruct itself to read `skills/s
 The agent MUST NOT attempt to write framework-specific logic without having the corresponding stack pack loaded into active memory.
 Once the architecture is understood, the agent MUST select the lowest-indexed incomplete task from the `.agents/session-[SHA]/task.md` file.
 The agent MUST immediately mark this selected task with the `[/]` notation to indicate that work is actively in progress.
-The agent MUST isolate its focus entirely to this single task, refusing to address unrelated issues or future steps until the current task is fully resolved.
+The agent MUST isolate its focus to this single task, refusing to address unrelated issues or future steps until the current task is fully resolved.
+Under RULE-ENG-02 (State Lineage & Layout Boundary Infrastructure), if the active task produces or consumes application state displayed in shared layout shells (Header, Sidebar, Navigation, Status Bar), updating the shared context provider or layout shell (`DashboardShell.tsx`, `_app.tsx`, `layout.tsx`) is classified as mandatory state infrastructure and is explicitly authorized.
+Under RULE-ENG-01 (Closed Vertical Slices), the agent MUST connect all interactive mutations to real endpoints or concrete clients; disguising unfinished logic under "Local Demo" or "Preview" badges violates AP-001 and is strictly forbidden.
 
 ### 3.2 Anti-Pattern Enforcement and Post-Coding Check
 During the actual code generation process, the agent MUST explicitly enforce all constraints defined in the `skills/s6-coding/resources/anti-patterns.md` registry. 
