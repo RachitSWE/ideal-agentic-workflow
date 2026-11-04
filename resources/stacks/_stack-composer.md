@@ -35,7 +35,8 @@ Scan the canonical subdirectories in `resources/stacks/` and match extracted tec
 #### C. Frontend Subsystems (`resources/stacks/frontend/`)
 | Technology Keywords | Applicable Stack Pack | Primary Domain |
 | :--- | :--- | :--- |
-| Next.js, React 19, App Router, RSC, Tailwind | `resources/stacks/frontend/nextjs.md` | React / Next.js Frontend |
+| Next.js, React 19, App Router, RSC, Tailwind | `resources/stacks/frontend/nextjs.md` | React / Next.js App Router |
+| Next.js Pages, Pages Router, _app.tsx, SSR | `resources/stacks/frontend/nextjs-pages.md` | Next.js Pages Router |
 | Angular 18/19, Signals, Zoneless, Standalone | `resources/stacks/frontend/angular.md` | Angular Modern Frontend |
 
 #### D. Minecraft Modding Subsystems (`resources/stacks/minecraft/`)

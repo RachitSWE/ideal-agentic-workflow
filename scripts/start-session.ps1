@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Automated Quickstart S0/S1 Bootstrapper for ideal-agentic-workflow v1.3.2.
+    Automated Quickstart S0/S1 Bootstrapper for ideal-agentic-workflow v1.3.3.
 .DESCRIPTION
     Scans the target repository, auto-detects active tech stacks, generates a unique
     session SHA, scaffolds the canonical .agents/session-[SHA]/ directory tree,
@@ -21,7 +21,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 Write-Host "`n========================================================" -ForegroundColor Cyan
-Write-Host "   IDEAL-AGENTIC-WORKFLOW v1.3.2: SESSION BOOTSTRAPPER   " -ForegroundColor Cyan
+Write-Host "   IDEAL-AGENTIC-WORKFLOW v1.3.3: SESSION BOOTSTRAPPER   " -ForegroundColor Cyan
 Write-Host "========================================================`n" -ForegroundColor Cyan
 
 # Verify Target Directory
@@ -100,10 +100,18 @@ if (Test-Path (Join-Path $TargetDir "package.json")) {
     if ($pkgJson.devDependencies) { $allDeps += $pkgJson.devDependencies.PSObject.Properties.Name }
 
     if ($allDeps -contains "next") {
-        $detectedStacks += "Next.js 16+ App Router / React 19"
-        $stackPacks += "resources/stacks/frontend/nextjs.md"
-        $ruleFiles += "rules/rules-frontend-nextjs.md"
-        $reviewers += "agents/nextjs-turborepo-reviewer.md"
+        $hasAppRouter = (Test-Path (Join-Path $TargetDir "src/app")) -or (Test-Path (Join-Path $TargetDir "app"))
+        if ($hasAppRouter) {
+            $detectedStacks += "Next.js 16+ App Router / React 19"
+            $stackPacks += "resources/stacks/frontend/nextjs.md"
+            $ruleFiles += "rules/rules-frontend-nextjs.md"
+            $reviewers += "agents/nextjs-turborepo-reviewer.md"
+        } else {
+            $detectedStacks += "Next.js Pages Router / React 19"
+            $stackPacks += "resources/stacks/frontend/nextjs-pages.md"
+            $ruleFiles += "rules/rules-frontend-nextjs-pages.md"
+            $reviewers += "agents/nextjs-turborepo-reviewer.md"
+        }
     } elseif ($allDeps -contains "@angular/core") {
         $detectedStacks += "Angular 21+ LTS (Signals / Zoneless)"
         $stackPacks += "resources/stacks/frontend/angular.md"
