@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![Version](https://img.shields.io/badge/version-1.3.3-blue.svg)](plugin.json)
+[![Version](https://img.shields.io/badge/version-1.3.4-blue.svg)](plugin.json)
 [![Author](https://img.shields.io/badge/author-RachitSWE-green.svg)](https://github.com/RachitSWE)
 [![Platform](https://img.shields.io/badge/platform-Google%20Antigravity-orange.svg)](https://antigravity.google)
 [![Verification Suite](https://img.shields.io/badge/verification-7%2F7%20passing-brightgreen.svg)](scripts/verify-file-citations.js)
@@ -17,7 +17,7 @@
 [S0–S11 Implementation Pipeline](#-s0s11-implementation-pipeline) •
 [SP1–SP6 Spec Pipeline](#-sp1sp6-spec-architecture-pipeline) •
 [Operating Modes](#-operating-modes) •
-[Subagent Ecosystem](#-subagent-ecosystem-48-agents) •
+[Subagent Ecosystem](#-subagent-ecosystem-34-agents) •
 [Stack Packs & Rules](#-technology-stack-packs--rules) •
 [Automation Commands](#-automation-commands) •
 [Verification Suite](#-verification--quality-suite) •
@@ -32,12 +32,16 @@
 - **Dual Autonomous Pipelines**:
   - **S0–S11 Implementation Pipeline**: Full end-to-end software development lifecycle from repository discovery to monotonic `GEMINI.md` synchronization.
   - **SP1–SP6 Spec Architecture Pipeline**: Autonomous feature specification engine featuring interactive system design grilling (`/grill-me`), bite-sized TDD plans (`/writing-plans`), and multi-agent peer review (`S4`).
+- **Scope Jail Enforcement**:
+  - Eliminates "vibe wandering" and runaway edits by strictly confining modifications to paths declared in `task.md`. Ancestor layout expansions are audited via [`commands/escalate-scope.ps1`](commands/escalate-scope.ps1) and mechanically gated pre-review via [`commands/verify-scope.ps1`](commands/verify-scope.ps1).
+- **5-Tier Mechanical Verification & Aesthetic Hardening**:
+  - Revokes "aesthetic immunity" in code reviews. AST linters, UI slop detection ([`commands/check-ui-slop.ps1`](commands/check-ui-slop.ps1)), and headless smoke gates ([`resources/smoke-templates/`](resources/smoke-templates/)) mechanically enforce viewport clamping, 1:1 avatars, 10px gesture thresholds, and image buffer entropy (> 50KB, std-dev > 15.0).
 - **Domain-Driven Targeted Testing (DTT)**:
   - Accelerates inner-loop feature iterations by executing domain-filtered unit and slice tests (`mvn test -Dtest=...`, `vitest path`, etc.) rather than running hundreds of tests on every single commit. Full suite verification is strictly gated at S10 pre-commit.
-- **48 Subagent Definitions**:
+- **34 Subagent Definitions**:
   - Full matrix of S2 auditors, S6 framework specialists, S8 code reviewers, and SP4 spec reviewers ensuring zero self-review and objective consensus.
-- **Strict Anti-Pattern Defense (AP-001 – AP-008)**:
-  - Eliminates mock data in production paths, narrative/conversational comments, compiler appeasement hacks (`@ts-ignore`, `any`), bulk staging (`git add .`), and state leakage outside `.agents/session-[SHA]/`.
+- **Strict Anti-Pattern Defense (AP-001 – AP-010)**:
+  - Eliminates mock data in production paths, narrative/conversational comments, compiler appeasement hacks (`@ts-ignore`, `any`), bulk staging (`git add .`), state leakage outside `.agents/session-[SHA]/`, and self-review fabrication.
 - **Zero Token Spoofing**:
   - Modern, token-efficient Markdown and Mermaid diagrams replace legacy ASCII box drawings to preserve context windows.
 - **Verified Link Integrity**:
@@ -74,12 +78,12 @@ flowchart TD
 | **S0** | [`s0-repo-architect`](skills/s0-repo-architect/SKILL.md) | Discovers codebase reality, pins tech stacks, compiles max-depth ASCII trees, and certifies `GEMINI.md`. |
 | **S1** | [`s1-orchestrator`](skills/s1-orchestrator/SKILL.md) | Reads `GEMINI.md`, scans incomplete sessions, derives 6-char SHA, detects mode, and scaffolds session tree. |
 | **S2** | [`s2-codebase-audit`](skills/s2-codebase-audit/SKILL.md) | Scales auditor subagents adaptively by repo size, inspects boundaries, and compiles master `audit.md`. |
-| **S3** | [`s3-planning`](skills/s3-planning/SKILL.md) | Scores tasks mathematically (`Severity × Complexity × Deps`), generating `plan.md` and tagged `task.md`. |
+| **S3** | [`s3-planning`](skills/s3-planning/SKILL.md) | Scores tasks mathematically (`Severity × Complexity × Deps`), declares Scope Jail targets, generating `plan.md` and tagged `task.md`. |
 | **S4** | [`s4-plan-review`](skills/s4-plan-review/SKILL.md) | Spawns `plan-critic` subagents to review plan architecture; gates coding on unanimous `LGTM`. |
 | **S5** | [`s5-plan-fix`](skills/s5-plan-fix/SKILL.md) | Methodically resolves plan review criticisms, updating `plan.md` and `task.md` until consensus. |
-| **S6** | [`s6-coding`](skills/s6-coding/SKILL.md) | Implements **exactly ONE task**, consults framework specialists, and enforces anti-pattern defenses. |
-| **S7** | [`s7-testing`](skills/s7-testing/SKILL.md) | Executes 3-tier checks: Static Type Check $\to$ Lint $\to$ **Domain-Driven Targeted Unit Tests** (`-Dtest=...`). |
-| **S8** | [`s8-code-review`](skills/s8-code-review/SKILL.md) | Dispatches stack-specific reviewers matched to task tag (`[backend]`, `[database]`, etc.) for consensus sign-off. |
+| **S6** | [`s6-coding`](skills/s6-coding/SKILL.md) | Implements **exactly ONE task**, constrained by Scope Jail hooks, consults framework specialists, and enforces anti-pattern defenses. |
+| **S7** | [`s7-testing`](skills/s7-testing/SKILL.md) | Executes 5-tier checks: Static Typecheck $\to$ AST & Slop Scanners $\to$ **Domain Targeted Tests** $\to$ Headless Smoke Gates $\to$ Scope Diff Gate. |
+| **S8** | [`s8-code-review`](skills/s8-code-review/SKILL.md) | Dispatches stack-specific reviewers with aesthetic immunity revoked, requiring mechanical verification logs for consensus sign-off. |
 | **S9** | [`s9-bug-fix`](skills/s9-bug-fix/SKILL.md) | Surgically remediates review findings, mandates 100% test re-pass via S7, and resubmits for LGTM. |
 | **S10** | [`s10-git-commit`](skills/s10-git-commit/SKILL.md) | Verifies all tasks complete, runs full suite regression gate, enforces atomic sizing ($\le 150$ LOC), and stages per-file. |
 | **S11** | [`s11-gemini-update`](skills/s11-gemini-update/SKILL.md) | Non-destructively synchronizes `GEMINI.md` Open Features and History, suggests global skills, and closes session. |
@@ -122,14 +126,13 @@ The workflow adjusts its execution overhead dynamically based on the session tri
 
 ---
 
-## 🤖 Subagent Ecosystem (48 Agents)
+## 🤖 Subagent Ecosystem (34 Agents)
 
 All subagents conform to the Antigravity specification in [`agents/`](agents/):
 
 ### 1. Orchestration, Planning & Spec Reviewers
 - [`agents/plan-critic.md`](agents/plan-critic.md): Evaluates implementation plans for architectural soundness and testability.
 - [`agents/audit-compiler.md`](agents/audit-compiler.md): Synthesizes distributed auditor findings into master `audit.md`.
-- [`agents/_persona-creator.md`](agents/_persona-creator.md): Scaffolds custom subagent personas for unmapped stacks.
 - [`agents/spec-system-architect-reviewer.md`](agents/spec-system-architect-reviewer.md): Reviews specification system boundaries, models, and interfaces.
 - [`agents/spec-security-edgecase-reviewer.md`](agents/spec-security-edgecase-reviewer.md): Audits spec security postures, auth flows, and edge conditions.
 - [`agents/spec-testability-scale-reviewer.md`](agents/spec-testability-scale-reviewer.md): Validates spec TDD tasks, observability, and scaling characteristics.
@@ -193,6 +196,7 @@ Each supported ecosystem provides paired stack pack specifications ([`resources/
 | **Minecraft NeoForge / Forge** | [`minecraft/mc-forge.md`](resources/stacks/minecraft/mc-forge.md) | [`rules-minecraft-forge.md`](rules/rules-minecraft-forge.md) |
 | **Stack Composer Engine** | [`_stack-composer.md`](resources/stacks/_stack-composer.md) | [`AGENTS.md`](rules/AGENTS.md) |
 | **Stack Pack Extensibility** | [`_stack-pack-creator.md`](resources/stacks/_stack-pack-creator.md) | [`AGENTS.md`](rules/AGENTS.md) |
+| **Persona Extensibility** | [`_persona-creator.md`](resources/_persona-creator.md) | [`resources/_persona-creator.md`](resources/_persona-creator.md) |
 
 ---
 
@@ -230,7 +234,10 @@ Cross-platform PowerShell automation scripts located in [`commands/`](commands/)
 | [`scripts/start-session.ps1`](scripts/start-session.ps1) | Auto-detects tech stack markers, allocates S8 reviewers, and bootstraps `.agents/session-[SHA]/`. |
 | [`commands/init-session.ps1`](commands/init-session.ps1) | Scaffolds `.agents/session-[SHA]/` directory tree, stubs, and checklist in milliseconds. |
 | [`commands/init-spec-session.ps1`](commands/init-spec-session.ps1) | Scaffolds `.agents/specs/session-[SHA]/` for the Spec Architecture Pipeline. |
-| [`commands/verify-stack.ps1`](commands/verify-stack.ps1) | Executes multi-tier verification (typecheck, lint, targeted unit tests) with `-Target <Class>` support. |
+| [`commands/verify-stack.ps1`](commands/verify-stack.ps1) | Executes 5-tier verification (typecheck, AST linters, unit tests, headless smoke gates) with `-Target <Class>` support. |
+| [`commands/check-ui-slop.ps1`](commands/check-ui-slop.ps1) | Scans source files for developer test buttons, leaked diagnostic strings, and visual slop. |
+| [`commands/escalate-scope.ps1`](commands/escalate-scope.ps1) | Whitelists ancestor layout or shared infrastructure files into `task.md` with audit logging. |
+| [`commands/verify-scope.ps1`](commands/verify-scope.ps1) | Pre-review Git diff scope gate verifying modified files strictly match declared `task.md` targets. |
 | [`commands/measure-diff.ps1`](commands/measure-diff.ps1) | Measures git diff insertions, modified file counts, and alerts if commit exceeds $\le 150$ LOC budget. |
 | [`commands/stage-commit.ps1`](commands/stage-commit.ps1) | Performs surgical per-file staging, validates Conventional Commit syntax, and verifies mandatory bodies. |
 | [`commands/sync-spec-gemini.ps1`](commands/sync-spec-gemini.ps1) | Non-destructively links certified specs from `.agents/specs/` into `GEMINI.md §5 Open Features`. |
@@ -256,11 +263,11 @@ node scripts/verify-file-citations.js
 ```
 
 ### Verification Checks Enforced:
-1. **Zero Broken Citations**: Validates that all relative file paths cited physically exist on disk (125+ unique paths verified).
-2. **Subagent Coverage**: Validates that all 48 subagent definitions in `agents/` are cited and accessible.
-3. **Rule Coverage**: Validates that all 14 invariant rules in `rules/` are cited.
-4. **Stack Pack Coverage**: Validates that all 15 stack packs and utilities in `resources/stacks/` are cited.
-5. **Command Script Coverage**: Validates that all 7 PowerShell automation scripts in `commands/` are cited.
+1. **Zero Broken Citations**: Validates that all relative file paths cited physically exist on disk (150+ unique paths verified).
+2. **Subagent Coverage**: Validates that all 34 canonical subagent definitions in `agents/` are cited and accessible.
+3. **Rule Coverage**: Validates that all 15 invariant rules in `rules/` are cited.
+4. **Stack Pack Coverage**: Validates that all 16 stack packs and utilities in `resources/stacks/` are cited.
+5. **Command Script Coverage**: Validates that all 10 PowerShell automation scripts in `commands/` are cited.
 6. **Auxiliary Resources**: Validates that all 28 skill-local schemas, scripts, and templates are cited.
 7. **Token Efficiency**: Validates that invocation prompts contain 0 heavy ASCII box drawing characters.
 

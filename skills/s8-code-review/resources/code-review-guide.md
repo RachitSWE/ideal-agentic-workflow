@@ -58,6 +58,9 @@ Reviewers MUST cross-reference changes against the following mandatory platform 
 | **Single Routing Root** | Root `app/` and `src/app/` MUST NOT coexist. Root `app/` shadows `src/app/`, creating silent collision and rendering defects. Conflicting directories must be eliminated. | **CRITICAL** (`CHANGES_REQUESTED`) |
 | **No Solo Typecheck** | `npx tsc --noEmit` validates types only, NOT runtime rendering. Every UI component task MUST include automated render/mount tests (React Testing Library / Vitest). | **HIGH** (`CHANGES_REQUESTED`) |
 | **No `localStorage` Fallback** | Production API clients (`lib/api.ts`) MUST NOT catch HTTP errors and silently return `localStorage` dummy payloads. Violates AP-001. Errors must propagate. | **CRITICAL** (`CHANGES_REQUESTED`) |
+| **Revocation of Aesthetic Immunity** | Reviewers MUST reject UI clutter, developer test buttons, unhandled overflow, and cartoonish novelty geometry. Active canvas elements MUST provide `#E92738` selection borders and 4 corner grips. Canvas grids must maintain $\ge 3:1$ contrast. | **HIGH** (`CHANGES_REQUESTED`) |
+| **Compositor Vector Parity** | Image compositors MUST render vector text via `opentype.js` Bezier curves (`<path d="...">`), normalize relative URLs to `DATA_DIR`, and assert buffer $> 50$KB with luminance standard deviation $> 15.0$. | **CRITICAL** (`CHANGES_REQUESTED`) |
+| **Mobile Pointer Parity** | Canvas and drag surfaces MUST declare `touch-action: pan-y`, standardize on W3C Pointer Events (`onPointerDown`), and require a 10px directional movement threshold before calling `e.preventDefault()`. | **HIGH** (`CHANGES_REQUESTED`) |
 
 ---
 

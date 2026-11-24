@@ -26,7 +26,7 @@ Before preparing `submit(N).md` or spawning any review subagents, the orchestrat
    - `resources/submit-template.md` (Schema for authoring `.agents/session-[SHA]/code-review/submit/submit(N).md`)
    - `resources/review-template.md` (Schema for reviewer outputs in `.agents/session-[SHA]/code-review/review/review(N).md`)
 3. **Primary Implementation Reviewer**:
-   - `agents/fullstack-implementation-reviewer.md` (or `agents/fullstack/implementation-reviewer.md`) (Primary reviewer for all code changes, evaluating AP-001 through AP-004)
+   - `agents/fullstack-implementation-reviewer.md` (Primary reviewer for all code changes, evaluating AP-001 through AP-004)
 4. **Dedicated Stack-Specific Reviewer Subagents** (Select and read based on the active task and stack):
    - **PostgreSQL + Hibernate + Flyway**:
      - `agents/postgres-hibernate-flyway-reviewer.md` (Auto-DDL ban, lazy fetching, sequence IDs, Flyway immutability, OSIV)
@@ -43,17 +43,18 @@ Before preparing `submit(N).md` or spawning any review subagents, the orchestrat
    - **MongoDB + Redis**:
      - `agents/mongo-redis-reviewer.md` (NoSQL injection defense, mandatory Redis TTLs, keyspace namespacing, BSON bounds)
    - **Minecraft Fabric Modding**:
-     - `agents/mc-fabric-reviewer.md` (or `agents/minecraft/implementation-reviewer.md`) (Client code bleed in server, zero `@Overwrite` mixins, 20 TPS, Blaze3D)
+     - `agents/mc-fabric-reviewer.md` (Client code bleed in server, zero `@Overwrite` mixins, 20 TPS, Blaze3D)
    - **Minecraft NeoForge Modding**:
      - `agents/mc-neoforge-reviewer.md` (DeferredRegister mandate, MOD vs FORGE bus targeting, `Dist.CLIENT` isolation)
    - **Security Reviewer**:
-     - `agents/fullstack-security-reviewer.md` (or `agents/fullstack/security-code-reviewer.md`) (Auth boundaries, token verification, secret leakage, injection defense)
+     - `agents/fullstack-security-reviewer.md` (Auth boundaries, token verification, secret leakage, injection defense)
 
 ---
 
 ## 3. Hard Gating and Behavioral Rules
 The integrity of the review process relies entirely on strict adherence to the project's foundational behavioral constraints:
 - **Pre-Review Test Gate**: "NEVER invoke S8 code review if any automated test is failing."
+- **Mechanical Verification Gate**: `submit(N).md` MUST contain verbatim terminal output demonstrating exit code 0 from `commands/verify-stack.ps1` across all applicable tiers (Tier 1 Typecheck/Lint, Tier 2 AST & Hygiene Scanners, Tier 3 Headless Smoke & Geometry Gates). Reviewers MUST immediately emit `CHANGES_REQUESTED (MISSING_VERIFICATION_EVIDENCE)` if this terminal evidence is absent.
 - **Zero Self-Review Invariant (AP-010)**: 
   **THE MAIN ORCHESTRATOR MUST NEVER CALL `write_to_file` OR `replace_file_content` ON ANY PATH IN `.agents/session-[SHA]/code-review/review/`.**
   Authoring a review file as the main agent is an instant workflow failure. Review files MUST originate exclusively from independent subagents spawned via `invoke_subagent` (or external R-Agent).
@@ -70,6 +71,7 @@ Using the schema from `resources/submit-template.md`:
 - Task description and requirements from `task.md`.
 - Explicit list of all files created or modified.
 - Surgical git diff of the changes (measured via `commands/measure-diff.ps1`).
+- Verbatim terminal execution logs of `commands/verify-stack.ps1` proving exit code 0 across Tier 1, Tier 2 AST scanners, and Tier 3 smoke gates.
 - Specific verification questions for the reviewer subagents.
 
 ### 4.2 Modal Reviewer Invocation

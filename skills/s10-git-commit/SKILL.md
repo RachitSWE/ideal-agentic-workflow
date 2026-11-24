@@ -26,10 +26,9 @@ Before staging any files, running diff measures, or executing `git commit`, the 
    - `skills/s10-git-commit/resources/commit-examples.md` (Conventional Commit type taxonomy, subjects, and scopes)
    - `skills/s10-git-commit/resources/breaking-change-guide.md` (Formatting breaking API footers and migrations)
    - `skills/s10-git-commit/resources/commit-split-guide.md` (Rules for decomposing commits exceeding 150 insertions)
-2. **Commit Automation Commands & Hooks**:
+2. **Commit Automation Commands**:
    - `commands/measure-diff.ps1` (Measures insertions and validates atomic threshold)
    - `commands/stage-commit.ps1` (Automated script for surgical per-file staging and validation)
-   - `hooks.json` (Pre-commit hook triggers and invariant validations)
 3. **Session Verification State**:
    - `.agents/session-[SHA]/task.md` (Enforce invariant: 100% of tasks must be marked `[x]`)
    - `.agents/session-[SHA]/CHECKLIST.md` (Track S10 completion)

@@ -93,21 +93,22 @@ The directory tree below reflects the exact max-depth tracked files in the repos
 ## 5. Open Features
 
 The agent MUST read this during planning and update during S11:
-- [ ] **FEAT-1**: {{FEATURE_1_TITLE}} — {{FEATURE_1_SPEC}}
-- [ ] **FEAT-2**: {{FEATURE_2_TITLE}} — {{FEATURE_2_SPEC}}
+*(No open features currently scheduled. The backlog is clear.)*
 
 ---
 
 ## 6. Anti-Patterns
 
-The CI/CD peer review pipeline and S6/S8 code review gates MUST reject any code violating these project-specific constraints:
+The CI/CD Peer Review pipeline and all developers MUST reject any code exhibiting these critical project-specific anti-patterns:
 
 1. **{{ANTI_PATTERN_1_TITLE}}**
    - *Violation*: {{EXACT_PROHIBITED_ACTION}}
-   - *Consequence*: {{DIRECT_FAILURE_MODE_OR_RISK}}
-   - *Mitigation*: {{MANDATORY_ARCHITECTURAL_RULE_OR_UTILITY}}
+   - *Consequence*: {{DIRECT_CONSEQUENCE_OF_VIOLATION}}
+   - *Mitigation*: {{MANDATORY_ARCHITECTURAL_PREVENTION_RULE}}
 
 2. **{{ANTI_PATTERN_2_TITLE}}**
    - *Violation*: {{EXACT_PROHIBITED_ACTION}}
-   - *Consequence*: {{DIRECT_FAILURE_MODE_OR_RISK}}
-   - *Mitigation*: {{MANDATORY_ARCHITECTURAL_RULE_OR_UTILITY}}
+   - *Consequence*: {{DIRECT_CONSEQUENCE_OF_VIOLATION}}
+   - *Mitigation*: {{MANDATORY_ARCHITECTURAL_PREVENTION_RULE}}
+
+<!-- Repeat through 10 to 12 critical project-specific anti-patterns -->

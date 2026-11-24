@@ -8,7 +8,7 @@ Copy the block into your chat prompt, select your **Mode**, describe your **Task
 ## 📋 Copyable Workflow Invocation Prompt
 
 ```markdown
-# INVOKE: ideal-agentic-workflow (v1.3.3)
+# INVOKE: ideal-agentic-workflow (v1.3.4)
 
 ## 1. Operating Mode (Select exactly one)
 - [x] **Standard** — Full S1–S11 lifecycle. Rigorous multi-agent engineering. (Default)
@@ -63,6 +63,7 @@ flowchart TD
 - **S3 · Planning** (Skill: `skills/s3-planning/SKILL.md`):
   - Mandatory Schemas: `resources/plan-template.md`, `resources/task-template.md`, `skills/s3-planning/resources/priority-rubric.md`.
   - Inputs: `GEMINI.md §2-§5`, `.agents/session-[SHA]/audit.md`, `.agents/session-[SHA]/context.md`.
+  - Scope Jail Targets: Mandate machine-readable YAML target schema (`target_files`, `infrastructure_files`) per task.
 - **S4 · Plan Review** (Skill: `skills/s4-plan-review/SKILL.md`):
   - Review Guidelines & Templates: `agents/plan-critic.md`, `skills/s4-plan-review/resources/plan-review-guide.md`, `resources/submit-template.md`, `resources/review-template.md`.
   - Target Plans: `.agents/session-[SHA]/plan.md`, `.agents/session-[SHA]/task.md`.
@@ -72,18 +73,27 @@ flowchart TD
   - Global Invariants: `rules/AGENTS.md`, `resources/senior-dev-standards.md`, `resources/error-handling-guide.md`, `resources/test-driven-development-guide.md`.
   - Anti-Patterns & Stack Detection: `skills/s6-coding/resources/stack-detector.md`, `skills/s6-coding/resources/anti-patterns.md`.
   - Active Stack Rules & Packs: Detected from `resources/stacks/*.md` and `rules/rules-*.md`.
+  - Scope Jail Enforcement: File mutations strictly scoped to declared target files and verified by `commands/verify-scope.ps1`. Escalate ancestor layout files via `pwsh -File commands/escalate-scope.ps1`.
   - Specialist Subagents: `agents/*-specialist.md`.
 - **S7 · Domain-Driven Targeted Testing** (Skill: `skills/s7-testing/SKILL.md`):
   - Mandatory Files: `skills/s7-testing/resources/test-commands.md`, `resources/test-driven-development-guide.md`, `rules/AGENTS.md` (AP-004).
-  - Targeted Runner: `pwsh -File commands/verify-stack.ps1 -Target <DomainClass>`.
+  - 5-Tier Mechanical Verification:
+    - Tier 1: Static Typecheck & Compilation
+    - Tier 2: Mechanical AST & Hygiene Scanners (`pwsh -File commands/check-ui-slop.ps1`, `scripts/check-layout-ast.mjs`, `scripts/check-gesture-parity.mjs`, `scripts/check-route-integrity.mjs`, `scripts/verify-runtime-env.mjs`)
+    - Tier 3: Domain-Driven Targeted Unit Tests (`-Dtest=...`, `vitest path`)
+    - Tier 3B-3D: Headless Smoke & Geometry Gates (`resources/smoke-templates/headless-geometry-smoke.spec.ts`, `resources/smoke-templates/process-lifecycle-smoke.ts`, `resources/smoke-templates/image-buffer-quality-smoke.ts`, `resources/smoke-templates/coordinate-parity-smoke.ts`)
+    - Gate 4: Git Diff Scope Gate (`pwsh -File commands/verify-scope.ps1`)
+  - Verification Runner: `pwsh -File commands/verify-stack.ps1 -Target <DomainClass>`.
 - **S8 · Code Review** (Skill: `skills/s8-code-review/SKILL.md`):
   - Routing Matrix & Guides: `skills/s8-code-review/resources/task-reviewer-matrix.md`, `skills/s8-code-review/resources/code-review-guide.md`, `resources/submit-template.md`, `resources/review-template.md`.
+  - Mandatory Evidence: Verbatim terminal logs proving exit code 0 from `commands/verify-stack.ps1` and scope verification from `commands/verify-scope.ps1` mandatory in `submit(N).md`.
+  - Aesthetic Immunity Revocation: Reviewers enforce vector parity, selection borders, touch-action, and reject UI slop.
   - Reviewer Subagents: Matched from `agents/*-reviewer.md` (e.g. `agents/postgres-hibernate-flyway-reviewer.md`, `agents/fullstack-implementation-reviewer.md`, etc.).
 - **S9 · Bug Fix Loop** (Skill: `skills/s9-bug-fix/SKILL.md`):
   - Mandatory Files: `.agents/session-[SHA]/code-review/review/review(n).md`, `skills/s8-code-review/resources/code-review-guide.md`, `rules/AGENTS.md`, `resources/error-handling-guide.md`, `resources/submit-template.md`.
   - Re-testing: Mandatory clean re-execution of `skills/s7-testing/SKILL.md`.
 - **S10 · Atomic Commit** (Skill: `skills/s10-git-commit/SKILL.md`):
-  - Commit Standards: `skills/s10-git-commit/resources/commit-examples.md`, `skills/s10-git-commit/resources/breaking-change-guide.md`, `skills/s10-git-commit/resources/commit-split-guide.md`, `hooks.json`.
+  - Commit Standards: `skills/s10-git-commit/resources/commit-examples.md`, `skills/s10-git-commit/resources/breaking-change-guide.md`, `skills/s10-git-commit/resources/commit-split-guide.md`.
   - Commands: `pwsh -File commands/measure-diff.ps1`, `pwsh -File commands/stage-commit.ps1`.
 - **S11 · GEMINI.md Update & Loop Closure** (Skill: `skills/s11-gemini-update/SKILL.md`):
   - Documentation Schema & Suggester: `skills/s11-gemini-update/resources/gemini-schema.md`, `resources/gemini-template.md`, `skills/s11-gemini-update/resources/global-skill-suggester.md`, `GEMINI.md`.
@@ -98,6 +108,8 @@ flowchart TD
 6. Stage files using AP-005 scope-aware staging (Mode A: per-file, ~50-150 LOC; Mode B: -Scaffold for >= 15 cohesive files with manifest) — never run blind `git add .` (AP-005).
 7. Unanimous LGTM required for plan (S4) and code (S8).
 8. Evidence before assertions: run actual test commands before claiming success.
+9. **Scope Jail Invariant**: All mutations must strictly match declared `target_files` or `infrastructure_files` in `task.md`. Unauthorized edits outside target scope are verified and rejected by `commands/verify-scope.ps1`. Legitimate layout extensions must use `commands/escalate-scope.ps1`.
+10. **Revocation of Aesthetic Immunity**: Code review is not purely syntactic. Mechanical AST linters and headless smoke gates strictly enforce 1:1 avatar geometry, containing block safety, 10px drag gesture thresholds, and image buffer entropy (> 50KB, std-dev > 15.0).
 
 ---
 **Directive**: Acknowledge mode and active stack, initialize `.agents/session-[SHA]/`, and begin S1.
@@ -120,6 +132,9 @@ flowchart TD
 
 - `pwsh -File commands/init-session.ps1`: Initializes `.agents/session-[SHA]/` directory structure.
 - `pwsh -File commands/measure-diff.ps1`: Measures git diff insertions and warns if > 150 lines.
-- `pwsh -File commands/verify-stack.ps1 -Target <Class>`: Runs Tier 1-3 verification with domain-driven targeted tests.
+- `pwsh -File commands/verify-stack.ps1 -Target <Class>`: Runs 5-Tier mechanical verification with AST scanners and headless smoke gates.
+- `pwsh -File commands/check-ui-slop.ps1`: Scans source files for developer test buttons, leaked diagnostic strings, and visual slop.
+- `pwsh -File commands/escalate-scope.ps1 -FilePath <Path> -Reason <Rationale>`: Whitelists ancestor layout/shared infrastructure files into `task.md`.
+- `pwsh -File commands/verify-scope.ps1`: Verifies git diff modified files strictly match `task.md` scope targets before review.
 - `pwsh -File commands/stage-commit.ps1`: Surgical per-file staging and Conventional Commit validator.
 - `pwsh -File commands/clean-session.ps1`: Prunes and archives completed sessions safely.

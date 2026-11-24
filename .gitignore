@@ -13,3 +13,6 @@ Thumbs.db
 .agents/
 .superpowers/
 *.log
+
+# Plugin internal development docs
+docs/

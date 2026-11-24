@@ -61,8 +61,7 @@ const searchFiles = [
   path.join(pluginRoot, 'INVOCATION-SPEC.md'),
   path.join(pluginRoot, 'README.md'),
   path.join(pluginRoot, 'AGENTS.md'),
-  path.join(pluginRoot, 'plugin.json'),
-  path.join(pluginRoot, 'hooks.json')
+  path.join(pluginRoot, 'plugin.json')
 ].filter(f => fs.existsSync(f));
 
 // Aggregate all content from search files

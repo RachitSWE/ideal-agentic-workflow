@@ -199,6 +199,10 @@ Before proceeding to S8 Code Review, the agent MUST execute the **S7-B Runtime S
 | **Minecraft Fabric** | Mod initializers & registry loading smoke | `./gradlew test --tests "*SmokeTest*"` | `.\gradlew.bat test --tests "*SmokeTest*"` |
 | **Minecraft NeoForge** | Mod bus & DeferredRegister binding smoke | `./gradlew test --tests "*SmokeTest*"` | `.\gradlew.bat test --tests "*SmokeTest*"` |
 | **Container / Gateway Boot** | Docker / Testcontainers health probe | `docker compose ps` | `docker compose ps` |
+| **Subprocess Health & Survival** | Unmocked worker spawn >= 3s (`process-lifecycle-smoke.ts`) | `npx vitest run resources/smoke-templates/process-lifecycle-smoke.ts` | `npx vitest run resources/smoke-templates/process-lifecycle-smoke.ts` |
+| **Headless Geometry & Touch** | Viewport clamping & touch scroll (`headless-geometry-smoke.spec.ts`) | `npx playwright test resources/smoke-templates/headless-geometry-smoke.spec.ts` | `npx playwright test resources/smoke-templates/headless-geometry-smoke.spec.ts` |
+| **Buffer Entropy & Compositor** | Sharp byte budget >50KB & entropy (`image-buffer-quality-smoke.ts`) | `npx vitest run resources/smoke-templates/image-buffer-quality-smoke.ts` | `npx vitest run resources/smoke-templates/image-buffer-quality-smoke.ts` |
+| **Shared Coordinate Parity** | Web DOM vs Sharp offset parity (`coordinate-parity-smoke.ts`) | `npx vitest run resources/smoke-templates/coordinate-parity-smoke.ts` | `npx vitest run resources/smoke-templates/coordinate-parity-smoke.ts` |
 
 ### 4.3 S7-B Assertions Checklist
 Every S7-B smoke test MUST assert:

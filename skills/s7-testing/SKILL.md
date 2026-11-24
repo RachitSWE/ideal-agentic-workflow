@@ -47,33 +47,47 @@ The agent MUST explicitly internalize and enforce the following invariants durin
 
 ---
 
-## 4. The Four-Tier Verification Hierarchy
-Before passing to S8, the agent MUST execute the verification suite in a structured four-tier sequence. 
+## 4. The Five-Tier Mechanical Verification Hierarchy
+Before passing to S8, the agent MUST execute the verification suite in a structured five-tier sequence. 
 If any tier fails, the agent MUST immediately stop, diagnose the failure, and return to S6 to remediate.
 
 ```text
-┌──────────────────────────────────────────────┐
-│ Tier 1: Static Type Checking                 │
-│ (e.g., tsc --noEmit, mypy, cargo check)      │
-└──────────────────────┬───────────────────────┘
-                       │ PASS
-┌──────────────────────▼───────────────────────┐
-│ Tier 2: Linting & Code Hygiene               │
-│ (e.g., eslint, ruff check, cargo clippy)     │
-└──────────────────────┬───────────────────────┘
-                       │ PASS
-┌──────────────────────▼───────────────────────┐
-│ Tier 3A: Domain-Driven Targeted Tests        │
-│ (e.g., mvn test -Dtest=XTest, vitest path)   │
-└──────────────────────┬───────────────────────┘
-                       │ PASS
-┌──────────────────────▼───────────────────────┐
-│ Tier 3B: Mandatory Runtime Smoke Gate (S7-B) │
-│ (e.g., Context Load, Real Persistence Cycle) │
-└──────────────────────┬───────────────────────┘
-                       │ PASS
-                       ▼
-             PROCEED TO S8 REVIEW
+┌────────────────────────────────────────────────────────────────────────┐
+│ Tier 1: Static Type Checking (tsc --noEmit, mypy, cargo check)         │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ PASS
+┌───────────────────────────────────▼────────────────────────────────────┐
+│ Tier 2: Static Code Hygiene & Mechanical AST/Regex Scanners            │
+│ (check-ui-slop.mjs, check-layout-ast.mjs, check-gesture-parity.mjs)    │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ PASS
+┌───────────────────────────────────▼────────────────────────────────────┐
+│ Tier 3A: Domain-Driven Targeted Automated Tests (DTT)                  │
+│ (mvn test -Dtest=XTest, vitest path, pytest target)                   │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ PASS
+┌───────────────────────────────────▼────────────────────────────────────┐
+│ Tier 3B: Mandatory Runtime Bootstrap & Smoke Gate (S7-B)               │
+│ (Application Context Load, Real Persistence Cycle, Process Health)    │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ PASS
+┌───────────────────────────────────▼────────────────────────────────────┐
+│ Tier 3C: Temporal Lifecycle & Polling Immunity Gate (S7-C)             │
+│ (vi.useFakeTimers over >=2 intervals, dirty form preservation)         │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ PASS
+┌───────────────────────────────────▼────────────────────────────────────┐
+│ Tier 3D: Headless Geometry, Buffer Entropy & Visual Parity Gate (S7-D) │
+│ (Playwright geometry, Sharp >50KB buffer entropy, coordinate parity)   │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ PASS
+┌───────────────────────────────────▼────────────────────────────────────┐
+│ Gate 4: Pre-Review Mechanical Scope Gate (verify-scope.ps1)            │
+│ (git diff --name-only asserted against task.md target_files)          │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ PASS
+                                    ▼
+                      PROCEED TO S8 REVIEW
 ```
 
 ### 4.1 Tier 1: Static Type Checking
@@ -81,9 +95,9 @@ The agent MUST verify that the codebase compiles cleanly with strict type valida
 Any unresolved type mismatch, broken import, or missing generic signature must be caught here.
 **Important Rule**: `npx tsc --noEmit` (or equivalent compiler check) is strictly Tier 1 Static Type Checking, **NOT** a test. Passing `tsc --noEmit` proves type compatibility only; it does not verify runtime execution, DOM rendering, or API interactions.
 
-### 4.2 Tier 2: Linting & Code Hygiene
-The agent MUST run the project's configured linter to verify formatting standards, unused variables, and style adherence.
-Warnings treated as errors by the repository's configuration must be fixed before proceeding.
+### 4.2 Tier 2: Linting, Code Hygiene & Mechanical AST Scanners
+The agent MUST run the project's configured linter and all Tier 2 mechanical scanners (`scripts/check-ui-slop.mjs`, `scripts/check-layout-ast.mjs`, `scripts/check-gesture-parity.mjs`, `scripts/check-route-integrity.mjs`, `scripts/verify-runtime-env.mjs`).
+Any developer button leakage, raw diagnostic string, containing-block trap, or gesture parity violation must be caught and remediated here before running tests.
 
 ### 4.3 Tier 3A: Domain-Driven Targeted Automated Tests
 The agent MUST execute targeted test suites covering the modified domain classes or components.
@@ -98,13 +112,22 @@ Before submitting code to S8 peer review, the agent MUST execute the **S7-B Runt
 - **Database Persistence (Postgres Hibernate / Prisma / Mongo Redis)**: Mandate real persistence cycle smoke testing exercising an end-to-end create -> read -> delete -> read cycle against an embedded database, Testcontainers instance, or active test database.
 - **Frontend (Next.js / React)**: Adapt `resources/smoke-templates/nextjs-smoke.spec.ts`. Mandate automated render/mount tests (using React Testing Library / Vitest) asserting that components mount without uncaught DOM exceptions and user interactions trigger the API client properly. Solo typechecking (`tsc --noEmit`) is strictly banned as a verification gate.
 - **Frontend (Angular)**: Adapt `resources/smoke-templates/angular-smoke.spec.ts`. Mandate standalone component mounting under zoneless change detection and router outlet verification.
+- **Subprocess Health & Survival**: Adapt `resources/smoke-templates/process-lifecycle-smoke.ts`. Mandate unmocked child process execution asserting live survival $\ge 3$s with stderr piping.
 - **Minecraft Fabric & NeoForge**: Mandate mod initializer execution and DeferredRegister / registry key binding smoke tests.
 
 ### 4.5 Tier 3C: Mandatory Temporal State & Polling Lifecycle Verification Gate (S7-C)
 Before proceeding to S8 Code Review, if any touched frontend component executes recurring asynchronous data fetches (`setInterval`, polling, SWR, React Query, WebSocket listeners), the agent MUST execute automated temporal lifecycle tests:
 1. **Dirty-State Preservation Assertion**: Using fake timers (e.g. `vi.useFakeTimers()`), simulate user form input (`isDirty = true`), advance timers across $\ge 2$ full polling cycles (e.g. `vi.advanceTimersByTime(10000)`), and assert that user uncommitted input text is NOT clobbered or reset by incoming background payloads.
 2. **Teardown & Unmount Assertion**: Assert that all intervals, timers, and event listeners disconnect cleanly upon unmount without uncaught state update warnings on unmounted components.
-Components failing to preserve dirty state during polling intervals MUST NOT be submitted to S8 Code Review.
+
+### 4.6 Tier 3D: Mandatory Headless Geometry, Buffer Entropy & Visual Parity Gate (S7-D)
+For tasks touching canvas renderers, image compositors, or viewport layouts:
+1. **Headless Geometry Clamping**: Adapt `resources/smoke-templates/headless-geometry-smoke.spec.ts`. Run Playwright headless tests asserting fixed bottom elements remain locked to viewport bottom across scroll, circular avatars maintain strict 1:1 square geometry, and touch canvas does not hijack mobile scrolling.
+2. **Buffer Entropy & Byte Budget**: Adapt `resources/smoke-templates/image-buffer-quality-smoke.ts`. Assert compositor image output buffer byte size $> 50$KB (rejecting 8KB black voids) and Sharp pixel luminance standard deviation $> 15.0$.
+3. **Shared Coordinate Parity**: Adapt `resources/smoke-templates/coordinate-parity-smoke.ts`. Assert preview DOM elements and backend Sharp composite offsets match within $\le 2\text{px}$.
+
+### 4.7 Gate 4: Pre-Review Mechanical Scope Gate
+Before submitting to S8, the agent MUST execute `pwsh -File commands/verify-scope.ps1`. The script checks `git status --porcelain` and `git diff --name-only` against `task.md` target declarations. If any unauthorized ghost files were touched, S8 review is blocked.
 
 ---
 

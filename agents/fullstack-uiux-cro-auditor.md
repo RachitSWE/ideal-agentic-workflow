@@ -25,6 +25,9 @@ You MUST emit `CHANGES_REQUESTED` if any of the following defects are detected i
 4. **AP-UI-04 (Missing UnsavedChangesBar)**: Editable configuration forms or studio views lacking `isDirty` tracking and a docked `UnsavedChangesBar` with navigation loss guards.
 5. **Accessibility (WCAG 2.2 AA)**: Touch targets below $44 \times 44$ px, missing high-contrast `:focus-visible` outline rings ($3:1$ contrast ratio), missing `aria-label` on icon-only buttons, or ignoring `prefers-reduced-motion`.
 6. **Responsive Layout Shifts**: Layout elements lacking responsive breakpoint wrapping, missing skeleton loading states, or causing Cumulative Layout Shift (CLS).
+7. **AP-UI-05 (Developer Jargon & Test Buttons)**: Developer test triggers (`[Test Discord]`, `[Debug]`, `Test Shader`, `Dump State`) or dummy expand buttons in production views instead of CSS `truncate` / `line-clamp-2` (BUG-009, BUG-021).
+8. **AP-UI-06 (Visual Affordance & Contrast)**: Canvas alignment grids with contrast < 3:1 against dark backdrops (BUG-013), or active canvas selections lacking `#E92738` crimson keyline border and 4 corner resize grips (BUG-018).
+9. **AP-UI-07 (Mobile Touch Parity)**: Canvas preview surfaces missing `touch-action: pan-y` or intercepting vertical page scrolling on mobile viewports (BUG-008, BUG-017).
 
 ## Output Schema
 Write findings using `resources/audit-template.md` or `resources/review-template.md`. Conclude with `LGTM` or `CHANGES_REQUESTED`.

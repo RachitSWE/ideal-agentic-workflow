@@ -2,7 +2,7 @@
   "displayName": "Ideal Agentic Workflow",
   "$schema": "https://antigravity.google/schemas/v1/plugin.json",
   "name": "ideal-agentic-workflow",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "logo": "icon.png",
   "description": "Enterprise-grade agentic engineering: S0–S11 Implementation Pipeline and SP1–SP6 Spec Architecture Pipeline with multi-agent consensus, domain-driven testing, and strict senior invariants.",
   "author": {

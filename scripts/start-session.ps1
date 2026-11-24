@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Automated Quickstart S0/S1 Bootstrapper for ideal-agentic-workflow v1.3.3.
+    Automated Quickstart S0/S1 Bootstrapper for ideal-agentic-workflow v1.3.4.
 .DESCRIPTION
     Scans the target repository, auto-detects active tech stacks, generates a unique
     session SHA, scaffolds the canonical .agents/session-[SHA]/ directory tree,
@@ -21,7 +21,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 Write-Host "`n========================================================" -ForegroundColor Cyan
-Write-Host "   IDEAL-AGENTIC-WORKFLOW v1.3.3: SESSION BOOTSTRAPPER   " -ForegroundColor Cyan
+Write-Host "   IDEAL-AGENTIC-WORKFLOW v1.3.4: SESSION BOOTSTRAPPER   " -ForegroundColor Cyan
 Write-Host "========================================================`n" -ForegroundColor Cyan
 
 # Verify Target Directory

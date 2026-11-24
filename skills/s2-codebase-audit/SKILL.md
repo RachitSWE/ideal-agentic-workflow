@@ -27,20 +27,20 @@ Furthermore, the orchestrating agent is strictly prohibited from authoring `audi
    - `skills/s2-codebase-audit/resources/minecraft-persona-bank.md` (Minecraft modding persona definitions)
 3. **Auditor Subagent Definitions** (Select and read based on detected stack and tier):
    - **Fullstack Web & General Architecture**:
-     - `agents/fullstack-architecture-auditor.md` (or `agents/fullstack/architecture-auditor.md`) (Module boundaries, decoupling, circular imports)
-     - `agents/fullstack-security-reviewer.md` (or `agents/fullstack/security-auditor.md`) (Auth, input sanitization, OWASP vulnerabilities)
-     - `agents/fullstack-performance-seo-auditor.md` (or `agents/fullstack/performance-seo-auditor.md`) (Core Web Vitals, SSR/SSG rendering, bundle size)
-     - `agents/fullstack-uiux-cro-auditor.md` (or `agents/fullstack/uiux-cro-auditor.md`) (WCAG 2.1 AA accessibility, UX patterns)
-     - `agents/fullstack-test-quality-auditor.md` (or `agents/fullstack/test-quality-auditor.md`) (Test coverage gaps, assertion quality, flakiness)
+     - `agents/fullstack-architecture-auditor.md` (Module boundaries, decoupling, circular imports)
+     - `agents/fullstack-security-reviewer.md` (Auth, input sanitization, OWASP vulnerabilities)
+     - `agents/fullstack-performance-seo-auditor.md` (Core Web Vitals, SSR/SSG rendering, bundle size)
+     - `agents/fullstack-uiux-cro-auditor.md` (WCAG 2.1 AA accessibility, UX patterns)
+     - `agents/fullstack-test-quality-auditor.md` (Test coverage gaps, assertion quality, flakiness)
    - **PostgreSQL + Hibernate + Flyway**:
      - `agents/postgres-hibernate-flyway-auditor.md` (Flyway migration checksums, lazy fetching, sequences, OSIV)
    - **Minecraft Modding**:
-     - `agents/mc-game-performance-auditor.md` (or `agents/minecraft/game-performance-auditor.md`) (20 TPS tick rate, entity tick loops, memory leaks)
-     - `agents/mc-mapping-compliance-auditor.md` (or `agents/minecraft/mapping-compliance-auditor.md`) (Yarn / Mojang symbol parity, version porting)
-     - `agents/mc-mod-compatibility-auditor.md` (or `agents/minecraft/mod-compatibility-auditor.md`) (Mixin injection conflicts, registry collisions)
+     - `agents/mc-game-performance-auditor.md` (20 TPS tick rate, entity tick loops, memory leaks)
+     - `agents/mc-mapping-compliance-auditor.md` (Yarn / Mojang symbol parity, version porting)
+     - `agents/mc-mod-compatibility-auditor.md` (Mixin injection conflicts, registry collisions)
    - **Audit Compilation & Persona Scaffolding**:
      - `agents/audit-compiler.md` (Merges distributed auditor outputs into master `audit.md`)
-     - `agents/_persona-creator.md` (Scaffolds custom auditor personas for unmapped stacks)
+     - `resources/_persona-creator.md` (Protocol for scaffolding custom auditor personas for unmapped stacks)
 
 ---
 
