@@ -1,6 +1,6 @@
 ---
 name: s4-plan-review
-description: "Executes the critical quality gate, spawning specialized subagents to evaluate the implementation plan against architectural constraints and audit findings."
+description: "Use after S3 Planning produces plan.md and task.md to run unanimous multi-agent architectural and adversarial plan review before any production code is edited."
 ---
 
 # S4 Plan Review
@@ -25,6 +25,7 @@ Before creating `submit(0).md` or spawning any subagents, the orchestrating agen
 1. **Plan Review Persona & Guidelines**:
    - `agents/plan-critic.md` (Persona definition for spawning plan-critic subagents)
    - `skills/s4-plan-review/resources/plan-review-guide.md` (Checklist, scoring criteria, and consensus gates)
+   - `skills/design-architect/SKILL.md` & `skills/adversarial-review/SKILL.md` (Cross-boundary shape check & skeptical falsification criteria)
 2. **Review Submission & Output Templates**:
    - `resources/submit-template.md` (Schema for writing `.agents/session-[SHA]/code-review/submit/submit(0).md`)
    - `resources/review-template.md` (Schema for reviewer verdicts in `.agents/session-[SHA]/code-review/review/review(n).md`)
