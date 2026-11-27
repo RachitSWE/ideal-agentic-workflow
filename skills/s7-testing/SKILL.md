@@ -1,6 +1,6 @@
 ---
 name: s7-testing
-description: "Executes the mandatory automated testing and verification gate, enforcing static typing, linting, and domain-driven targeted test passes before permitting S8 Code Review."
+description: "Use before any code review or commit to run the 5-Tier verification gate, fault-injection proofs, end-to-end harness runs, and S7 runtime smoke checks."
 ---
 
 # S7 Automated Testing
@@ -127,7 +127,13 @@ For tasks touching canvas renderers, image compositors, or viewport layouts:
 3. **Shared Coordinate Parity**: Adapt `resources/smoke-templates/coordinate-parity-smoke.ts`. Assert preview DOM elements and backend Sharp composite offsets match within $\le 2\text{px}$.
 
 ### 4.7 Gate 4: Pre-Review Mechanical Scope Gate
-Before submitting to S8, the agent MUST execute `pwsh -File commands/verify-scope.ps1`. The script checks `git status --porcelain` and `git diff --name-only` against `task.md` target declarations. If any unauthorized ghost files were touched, S8 review is blocked.
+Before submitting to S8, the agent MUST execute `powershell|pwsh -File commands/verify-scope.ps1`. The script checks `git status --porcelain` and `git diff --name-only` against `task.md` target declarations. If any unauthorized ghost files were touched, S8 review is blocked.
+
+### 4.8 Fault-Injection Proof, Dynamic Verification Harness & Perf Audit
+- **Fault-Injection Check (`EP-01`, `EP-06`)**: Any newly added domain test, regression spec, or smoke gate MUST be observed failing once against broken/unmodified behavior (via TDD RED-then-GREEN or negative fault-injection test) before trusting a green exit code. Zero tautological pass-always assertions.
+- **Project-Local Verification Harness**: If the repository lacks real end-to-end S7-B/S7-D smoke coverage, generate `.agents/skills/verify-<app>/SKILL.md` + `features/*.md` via `skills/verify-harness-generator/SKILL.md` (and keep it synced with `skills/verify-harness-maintainer/SKILL.md`).
+- **Performance Claims (`EP-11`)**: Vet any latency, throughput, or memory improvement through `skills/benchmark-audit/SKILL.md` before reporting numbers to S8.
+- **Formal Concurrency / State Invariants**: For subtle race conditions, retries, or permission state machines, generate or re-verify models with `skills/statechart/SKILL.md` (`commands/invoke-statechart.ps1`).
 
 ---
 
