@@ -61,7 +61,8 @@ const searchFiles = [
   path.join(pluginRoot, 'INVOCATION-SPEC.md'),
   path.join(pluginRoot, 'README.md'),
   path.join(pluginRoot, 'AGENTS.md'),
-  path.join(pluginRoot, 'plugin.json')
+  path.join(pluginRoot, 'plugin.json'),
+  path.join(pluginRoot, 'hooks.json')
 ].filter(f => fs.existsSync(f));
 
 // Aggregate all content from search files
@@ -120,14 +121,66 @@ for (const { file, rel, text } of corpus) {
       brokenCitations.push({ source: rel, citedPath });
     }
   }
+
+  // Also verify relative Markdown links `[text](relative/path.md)` (ignoring http/mailto/anchors/templates)
+  const mdLinkRegex = /\[[^\]]*\]\(([^)\s]+)\)/g;
+  while ((match = mdLinkRegex.exec(text)) !== null) {
+    let target = match[1].trim();
+    if (
+      !target ||
+      target.startsWith('#') ||
+      /^(https?:|mailto:|file:|data:)/i.test(target) ||
+      target.includes('[') ||
+      target.includes('{') ||
+      target.includes('*')
+    ) {
+      continue;
+    }
+    target = target.split('#')[0];
+    if (!target) continue;
+    const candidate = target.startsWith('/') ? path.join(pluginRoot, target.slice(1)) : path.resolve(path.dirname(file), target);
+    if (!fs.existsSync(candidate)) {
+      brokenCitations.push({ source: rel, citedPath: target });
+    }
+  }
 }
 
 assertTest(
-  'Zero broken file citations',
+  'Zero broken file citations (backticks & relative links)',
   brokenCitations.length === 0,
   brokenCitations.map(b => `In ${b.source} -> cited "${b.citedPath}" (not found on disk)`).join('; ')
 );
 console.log(`         Total unique physical citations validated: ${foundCitations.size}`);
+
+// Validate hooks.json hook script references (Antigravity named-hook schema)
+const hooksPath = path.join(pluginRoot, 'hooks.json');
+if (fs.existsSync(hooksPath)) {
+  const hooksJson = JSON.parse(fs.readFileSync(hooksPath, 'utf8'));
+  const brokenHooks = [];
+  let checkedHookHandlers = 0;
+  for (const [hookName, cfg] of Object.entries(hooksJson)) {
+    if (!cfg || typeof cfg !== 'object') continue;
+    for (const [ev, entries] of Object.entries(cfg)) {
+      if (!Array.isArray(entries)) continue;
+      for (const entry of entries) {
+        const handlers = Array.isArray(entry.hooks) ? entry.hooks : [entry];
+        for (const h of handlers) {
+          if (!h || !h.command) continue;
+          checkedHookHandlers++;
+          const m = String(h.command).match(/\b(scripts\/[^\s"']+)/);
+          if (!m || !fs.existsSync(path.join(pluginRoot, m[1]))) {
+            brokenHooks.push(`${hookName}.${ev}:${h.command}`);
+          }
+        }
+      }
+    }
+  }
+  assertTest(
+    `hooks.json referenced script entrypoints exist on disk (Checked: ${checkedHookHandlers})`,
+    checkedHookHandlers > 0 && brokenHooks.length === 0,
+    brokenHooks.length > 0 ? `Missing hook scripts: ${brokenHooks.join(', ')}` : 'Zero command handlers inspected in hooks.json'
+  );
+}
 
 // -----------------------------------------------------------------------------
 // TEST SUITE 2: COMPLETE CITATION COVERAGE FOR SUBAGENT PERSONAS (agents/)
@@ -154,12 +207,14 @@ assertTest(
 );
 
 // -----------------------------------------------------------------------------
-// TEST SUITE 3: COMPLETE CITATION COVERAGE FOR INVARIANT RULES (rules/)
+// TEST SUITE 3: COMPLETE CITATION COVERAGE FOR CHARTER & STACK RULES
 // -----------------------------------------------------------------------------
-console.log('\n--- TEST SUITE 3: Invariant Rules Citation Coverage (rules/) ---');
+console.log('\n--- TEST SUITE 3: Core Charter (rules/) & On-Demand Stack Rules (resources/stack-rules/) ---');
 
-const ruleFiles = collectFiles(path.join(pluginRoot, 'rules'), f => f.endsWith('.md'))
-  .map(f => path.relative(pluginRoot, f).replace(/\\/g, '/'));
+const ruleFiles = [
+  ...collectFiles(path.join(pluginRoot, 'rules'), f => f.endsWith('.md')),
+  ...collectFiles(path.join(pluginRoot, 'resources', 'stack-rules'), f => f.endsWith('.md')),
+].map(f => path.relative(pluginRoot, f).replace(/\\/g, '/'));
 
 const uncitedRules = [];
 for (const rulePath of ruleFiles) {
@@ -171,7 +226,7 @@ for (const rulePath of ruleFiles) {
 }
 
 assertTest(
-  `All rules in rules/ are cited (Found: ${ruleFiles.length - uncitedRules.length}/${ruleFiles.length})`,
+  `All charter & stack rules are cited (Found: ${ruleFiles.length - uncitedRules.length}/${ruleFiles.length})`,
   uncitedRules.length === 0,
   `Uncited rules: ${uncitedRules.join(', ')}`
 );
@@ -230,7 +285,11 @@ console.log('\n--- TEST SUITE 6: Skill-Local Resources & Schemas Citation Covera
 const skillResourceFiles = [
   ...collectFiles(path.join(pluginRoot, 'skills'), f => {
     const rel = path.relative(path.join(pluginRoot, 'skills'), f).replace(/\\/g, '/');
-    return !rel.endsWith('SKILL.md'); // only auxiliary resources, templates, schemas, scripts
+    if (rel === 'statechart/SKILL.md') return true; // verify core formal skill entrypoint explicitly
+    if (rel.startsWith('statechart/scripts/') && rel !== 'statechart/scripts/statechart.ts') {
+      return false; // exclude internal TypeScript modules & test corpus blobs from per-file markdown citation clutter
+    }
+    return !rel.endsWith('SKILL.md'); // auxiliary resources, tracks, templates, schemas, scripts
   })
 ].map(f => path.relative(pluginRoot, f).replace(/\\/g, '/'));
 

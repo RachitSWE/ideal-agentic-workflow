@@ -1,18 +1,23 @@
 #!/usr/bin/env node
 /**
  * check-route-integrity.mjs
- * 
- * Tier 2 Mechanical Scanner: Route Integrity, Route Guards & Asset Sandboxing.
- * Enforces Invariants 23 & 25 and remediates BUG-006, BUG-007, BUG-011, BUG-016.
- * 
- * Scans frontend and API modules for:
- * 1. Broken navigation: Customiser action links looping back to '/plugins' instead of dedicated customiser views (BUG-007).
- * 2. Un-sandboxed device paths: Raw '/storage/emulated/0/...' or 'file://' roots in image sources (BUG-011).
- * 3. Route guard integrity: Customiser routes must include enabled-state guards (BUG-016).
+ *
+ * Tier 2 Mechanical Scanner: Route Integrity & Asset Sandboxing.
+ *
+ * Scans production frontend/API files for:
+ * 1. Un-sandboxed host/device filesystem paths ('/storage/emulated/0/...', 'file:///', 'C:\Users\...') in client/web sources.
+ * 2. Optional domain profile checks (--profile discord-bot-customizer): Customiser navigation loops to '/plugins'.
  */
 
 import fs from 'fs';
 import path from 'path';
+
+const profileArgIdx = process.argv.indexOf('--profile');
+const domainProfile =
+  (profileArgIdx !== -1 ? process.argv[profileArgIdx + 1] : '') ||
+  process.env.IAW_DOMAIN_PROFILE ||
+  '';
+const isDiscordCustomizerProfile = domainProfile === 'discord-bot-customizer';
 
 function collectFiles(dir, extensions) {
   let results = [];
@@ -55,23 +60,30 @@ for (const file of files) {
   const lines = content.split('\n');
 
   lines.forEach((line, idx) => {
-    // Check 1: Un-sandboxed mobile device paths (BUG-011 / Invariant 25)
+    // Check 1: Un-sandboxed host/device paths (universal web asset sandboxing)
     if (/(?:\/storage\/emulated\/0|\/sdcard\/|file:\/\/\/|C:\\Users)/i.test(line)) {
-      // Ignore comments
       const trimmed = line.trim();
       if (!trimmed.startsWith('//') && !trimmed.startsWith('*')) {
         console.error(`  [VIOLATION] ${file}:${idx + 1}`);
-        console.error(`    -> Rule: Asset Sandboxing (BUG-011 / Invariant 25)`);
+        console.error(`    -> Rule: Web Asset Sandboxing`);
         console.error(`    -> Found raw host device path '${trimmed}'. Browser security blocks local filesystem paths.`);
-        console.error(`    -> Fix: Pass relative web assets via '/api/welcomer/asset?name=...' or use bundled web-safe fallbacks.`);
+        console.error(
+          isDiscordCustomizerProfile
+            ? `    -> Fix: Serve web assets via '/api/welcomer/asset?name=...' or bundled public web paths.`
+            : `    -> Fix: Serve assets via canonical public routes or storage URLs, never raw device paths.`
+        );
         violations++;
       }
     }
 
-    // Check 2: Customiser buttons looping back to /plugins (BUG-007 / Invariant 23)
-    if (/btn-customis|btn-customize|Customise|Customize/i.test(line) && /href=["']\/plugins["']/i.test(line)) {
+    // Check 2 (opt-in domain profile): Customiser buttons looping back to /plugins
+    if (
+      isDiscordCustomizerProfile &&
+      /btn-customis|btn-customize|Customise|Customize/i.test(line) &&
+      /href=["']\/plugins["']/i.test(line)
+    ) {
       console.error(`  [VIOLATION] ${file}:${idx + 1}`);
-      console.error(`    -> Rule: Navigation Deep-Link Integrity (BUG-007 / Invariant 23)`);
+      console.error(`    -> Rule: Navigation Deep-Link Integrity (discord-bot-customizer profile)`);
       console.error(`    -> Customiser button points to '/plugins', looping back to the catalog root.`);
       console.error(`    -> Fix: Deep-link directly to dedicated modal or route (e.g. '/customiser/[plugin]').`);
       violations++;

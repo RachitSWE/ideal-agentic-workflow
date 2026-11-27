@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 /**
  * check-ui-slop.mjs
- * 
+ *
  * Tier 2 Mechanical Scanner: UI Slop, Developer Jargon & Mock Button Purge.
- * Enforces Invariant 19 and remediates BUG-009, BUG-021.
- * 
+ *
  * Scans production frontend templates for:
- * 1. Developer test buttons and labels ('Test Discord', 'Test Shader', 'Dump State', 'Mock Render').
+ * 1. Developer test buttons and labels ('Dump State', 'Debug Mode', 'Temp Button', 'Dev Only', 'Mock Button').
  * 2. Raw diagnostic leaks in user layouts ('localhost:\d+', '127.0.0.1', 'Node v\d+', 'x64', 'arm64').
  * 3. Superfluous mock expand buttons simulating text overflow instead of CSS line clamping.
  */
@@ -15,7 +14,7 @@ import fs from 'fs';
 import path from 'path';
 
 const FORBIDDEN_JARGON_PATTERNS = [
-  { pattern: /\b(test\s*render|dump\s*state|debug\s*mode|temp\s*button|dev\s*only|mock\s*button|test\s*discord|test\s*shader)\b/i, name: 'Developer Test Button / Jargon' },
+  { pattern: /\b(test\s*render|dump\s*state|debug\s*mode|temp\s*button|dev\s*only|mock\s*button)\b/i, name: 'Developer Test Button / Jargon' },
   { pattern: /\b(localhost:\d+|127\.0\.0\.1|Node\s+v\d+|\bx64\b|\barm64\b|TypeError:\s*|Unhandled\s+Promise)\b/i, name: 'Raw Diagnostic / Environment Leak' },
   { pattern: /<button[^>]*>\s*(?:Show\s*More|Expand\s*Text|Read\s*Full)\s*<\/button>/i, name: 'Dummy Text Expand Button (Use CSS line-clamp-2 / truncate instead)' }
 ];

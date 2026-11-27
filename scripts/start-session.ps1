@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Automated Quickstart S0/S1 Bootstrapper for ideal-agentic-workflow v1.3.4.
+    Automated Quickstart S0/S1 Bootstrapper for ideal-agentic-workflow v2.0.0.
 .DESCRIPTION
     Scans the target repository, auto-detects active tech stacks, generates a unique
     session SHA, scaffolds the canonical .agents/session-[SHA]/ directory tree,
@@ -21,7 +21,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 Write-Host "`n========================================================" -ForegroundColor Cyan
-Write-Host "   IDEAL-AGENTIC-WORKFLOW v1.3.4: SESSION BOOTSTRAPPER   " -ForegroundColor Cyan
+Write-Host "   IDEAL-AGENTIC-WORKFLOW v2.0.0: SESSION BOOTSTRAPPER   " -ForegroundColor Cyan
 Write-Host "========================================================`n" -ForegroundColor Cyan
 
 # Verify Target Directory
@@ -57,14 +57,14 @@ if (Test-Path (Join-Path $TargetDir "pom.xml")) {
     if ($pomContent -match "fabric-loom") {
         $detectedStacks += "Minecraft Fabric (Maven)"
         $stackPacks += "resources/stacks/minecraft/mc-fabric.md"
-        $ruleFiles += "rules/rules-minecraft-fabric.md"
+        $ruleFiles += "resources/stack-rules/rules-minecraft-fabric.md"
         $reviewers += "agents/mc-fabric-reviewer.md"
     } else {
         $detectedStacks += "Java / Spring Boot (Maven)"
         $stackPacks += "resources/stacks/backend/backend-java.md"
         $stackPacks += "resources/stacks/backend/java-databases.md"
-        $ruleFiles += "rules/rules-backend-java.md"
-        $ruleFiles += "rules/rules-backend-java-databases.md"
+        $ruleFiles += "resources/stack-rules/rules-backend-java.md"
+        $ruleFiles += "resources/stack-rules/rules-backend-java-databases.md"
         $reviewers += "agents/spring-boot-reviewer.md"
     }
 } elseif ((Test-Path (Join-Path $TargetDir "build.gradle")) -or (Test-Path (Join-Path $TargetDir "build.gradle.kts"))) {
@@ -75,19 +75,19 @@ if (Test-Path (Join-Path $TargetDir "pom.xml")) {
     if ($gradleContent -match "fabric-loom") {
         $detectedStacks += "Minecraft Fabric (Gradle)"
         $stackPacks += "resources/stacks/minecraft/mc-fabric.md"
-        $ruleFiles += "rules/rules-minecraft-fabric.md"
+        $ruleFiles += "resources/stack-rules/rules-minecraft-fabric.md"
         $reviewers += "agents/mc-fabric-reviewer.md"
     } elseif ($gradleContent -match "net.neoforged") {
         $detectedStacks += "Minecraft NeoForge (Gradle)"
         $stackPacks += "resources/stacks/minecraft/mc-forge.md"
-        $ruleFiles += "rules/rules-minecraft-forge.md"
+        $ruleFiles += "resources/stack-rules/rules-minecraft-forge.md"
         $reviewers += "agents/mc-neoforge-reviewer.md"
     } else {
         $detectedStacks += "Java / Spring Boot (Gradle)"
         $stackPacks += "resources/stacks/backend/backend-java.md"
         $stackPacks += "resources/stacks/backend/java-databases.md"
-        $ruleFiles += "rules/rules-backend-java.md"
-        $ruleFiles += "rules/rules-backend-java-databases.md"
+        $ruleFiles += "resources/stack-rules/rules-backend-java.md"
+        $ruleFiles += "resources/stack-rules/rules-backend-java-databases.md"
         $reviewers += "agents/spring-boot-reviewer.md"
     }
 }
@@ -104,37 +104,37 @@ if (Test-Path (Join-Path $TargetDir "package.json")) {
         if ($hasAppRouter) {
             $detectedStacks += "Next.js 16+ App Router / React 19"
             $stackPacks += "resources/stacks/frontend/nextjs.md"
-            $ruleFiles += "rules/rules-frontend-nextjs.md"
+            $ruleFiles += "resources/stack-rules/rules-frontend-nextjs.md"
             $reviewers += "agents/nextjs-turborepo-reviewer.md"
         } else {
             $detectedStacks += "Next.js Pages Router / React 19"
             $stackPacks += "resources/stacks/frontend/nextjs-pages.md"
-            $ruleFiles += "rules/rules-frontend-nextjs-pages.md"
+            $ruleFiles += "resources/stack-rules/rules-frontend-nextjs-pages.md"
             $reviewers += "agents/nextjs-turborepo-reviewer.md"
         }
     } elseif ($allDeps -contains "@angular/core") {
         $detectedStacks += "Angular 21+ LTS (Signals / Zoneless)"
         $stackPacks += "resources/stacks/frontend/angular.md"
-        $ruleFiles += "rules/rules-frontend-angular.md"
+        $ruleFiles += "resources/stack-rules/rules-frontend-angular.md"
         $reviewers += "agents/angular-signals-reviewer.md"
     }
 
     if ($allDeps -contains "prisma" -or $allDeps -contains "@prisma/client") {
         $detectedStacks += "PostgreSQL + Prisma ORM"
         $stackPacks += "resources/stacks/database/postgresql.md"
-        $ruleFiles += "rules/rules-database-postgresql.md"
+        $ruleFiles += "resources/stack-rules/rules-database-postgresql.md"
         $reviewers += "agents/postgres-prisma-reviewer.md"
     }
     if ($allDeps -contains "mongodb" -or $allDeps -contains "mongoose") {
         $detectedStacks += "MongoDB"
         $stackPacks += "resources/stacks/database/mongodb.md"
-        $ruleFiles += "rules/rules-database-mongodb.md"
+        $ruleFiles += "resources/stack-rules/rules-database-mongodb.md"
         $reviewers += "agents/mongo-redis-reviewer.md"
     }
     if ($allDeps -contains "redis" -or $allDeps -contains "ioredis" -or $allDeps -contains "@upstash/redis") {
         $detectedStacks += "Redis Cache"
         $stackPacks += "resources/stacks/database/redis.md"
-        $ruleFiles += "rules/rules-database-redis.md"
+        $ruleFiles += "resources/stack-rules/rules-database-redis.md"
     }
 }
 
@@ -143,8 +143,8 @@ if ((Test-Path (Join-Path $TargetDir "pyproject.toml")) -or (Test-Path (Join-Pat
     $detectedStacks += "Python 3.12+ (FastAPI / AI)"
     $stackPacks += "resources/stacks/backend/backend-python.md"
     $stackPacks += "resources/stacks/backend/python-databases.md"
-    $ruleFiles += "rules/rules-backend-python.md"
-    $ruleFiles += "rules/rules-backend-python-databases.md"
+    $ruleFiles += "resources/stack-rules/rules-backend-python.md"
+    $ruleFiles += "resources/stack-rules/rules-backend-python-databases.md"
     $reviewers += "agents/python-ai-reviewer.md"
 }
 
@@ -153,8 +153,8 @@ if (Test-Path (Join-Path $TargetDir "Cargo.toml")) {
     $detectedStacks += "Rust 1.82+ (Axum / Tokio)"
     $stackPacks += "resources/stacks/backend/backend-rust.md"
     $stackPacks += "resources/stacks/backend/rust-databases.md"
-    $ruleFiles += "rules/rules-backend-rust.md"
-    $ruleFiles += "rules/rules-backend-rust-databases.md"
+    $ruleFiles += "resources/stack-rules/rules-backend-rust.md"
+    $ruleFiles += "resources/stack-rules/rules-backend-rust-databases.md"
     $reviewers += "agents/rust-systems-reviewer.md"
 }
 
