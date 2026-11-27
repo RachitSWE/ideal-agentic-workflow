@@ -3,8 +3,8 @@
     Automates S10 clustered batch commits via scripts/auto-commit.mjs (no git add ., no git push).
 .DESCRIPTION
     Discovers pending repository changes, groups them by domain/directory cluster up to MaxLoc lines,
-    generates Conventional Commit messages (via GEMINI_API_KEY / AI_COMMIT_API_KEY or deterministic offline
-    fallback preserving exact PascalCase/camelCase identifiers), and stages each batch explicitly per file.
+    generates Conventional Commit messages via Gemini API (GEMINI_API_KEY / AI_COMMIT_API_KEY; fails
+    closed on missing key or HTTP 429 rate limits), and stages each batch explicitly per file.
 .PARAMETER DryRun
     Preview computed batches and generated Conventional Commit messages without staging or committing.
 .PARAMETER BatchLimit
