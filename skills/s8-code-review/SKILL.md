@@ -1,6 +1,6 @@
 ---
 name: s8-code-review
-description: "Orchestrates the rigorous peer review phase, strictly gating progression based on automated test results and multi-agent consensus."
+description: "Use once S7 tests pass green to run independent execution-backed code review, adversarial falsification, comment hygiene, and unanimous LGTM gating."
 ---
 
 # S8 Code Review
@@ -25,8 +25,10 @@ Before preparing `submit(N).md` or spawning any review subagents, the orchestrat
 2. **Submission & Review Templates**:
    - `resources/submit-template.md` (Schema for authoring `.agents/session-[SHA]/code-review/submit/submit(N).md`)
    - `resources/review-template.md` (Schema for reviewer outputs in `.agents/session-[SHA]/code-review/review/review(N).md`)
-3. **Primary Implementation Reviewer**:
-   - `agents/fullstack-implementation-reviewer.md` (Primary reviewer for all code changes, evaluating AP-001 through AP-004)
+3. **Primary & Adversarial Implementation Reviewers**:
+   - `agents/fullstack-implementation-reviewer.md` (Primary reviewer for all code changes, evaluating `AP-001` through `AP-010`)
+   - `agents/adversarial-falsifier-reviewer.md` via `skills/adversarial-review/SKILL.md` (Required on multi-file / cross-boundary / critical diffs: attacks stated user intent end-to-end and keeps ONLY findings proven by live failing runs)
+   - `agents/comment-hygiene-reviewer.md` via `skills/comment-audit/SKILL.md` (Pre-review / parallel read-only audit of narration comments, dead blocks, and `AP-004` suppressions)
 4. **Dedicated Stack-Specific Reviewer Subagents** (Select and read based on the active task and stack):
    - **PostgreSQL + Hibernate + Flyway**:
      - `agents/postgres-hibernate-flyway-reviewer.md` (Auto-DDL ban, lazy fetching, sequence IDs, Flyway immutability, OSIV)

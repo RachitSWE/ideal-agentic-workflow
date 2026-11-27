@@ -14,8 +14,8 @@ The total count and selection of reviewer subagents depends on the active operat
 | :--- | :--- | :--- |
 | **Trivial Mode** | **0** | S8 is skipped entirely. |
 | **Fast Mode** | **1** | Always spawn 1 reviewer using `agents/fullstack-implementation-reviewer.md`. |
-| **Standard Mode** | **2–3** | Spawn 1 `agents/fullstack-implementation-reviewer.md` + 1 domain/stack specialist from the matrix below (or 2 if `[fullstack]`). |
-| **Duolithic Mode** | **3–4** | Output R-Agent prompt delegating review of `submit(N).md` with 3–4 specialized personas. |
+| **Standard Mode** | **2–4** | Spawn 1 `agents/fullstack-implementation-reviewer.md` + 1 domain/stack specialist from the matrix below (or 2 if `[fullstack]`) + `agents/adversarial-falsifier-reviewer.md` (on multi-file/critical diffs; pre-run `agents/comment-hygiene-reviewer.md` in S6). |
+| **Duolithic Mode** | **3–4** | Output R-Agent prompt delegating review of `submit(N).md` with 3–4 specialized personas + `agents/adversarial-falsifier-reviewer.md`. |
 
 ---
 

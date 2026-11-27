@@ -41,26 +41,19 @@ For Minecraft projects, the reviewer MUST prioritize verifying tick-rate efficie
 The reviewer MUST ensure that the implementation is not just syntactically correct, but contextually robust for the target environment.
 The reviewer MUST reject the code if it fails to account for these domain-specific vulnerabilities.
 
-### 2.4 Platform Domain Verification Tables
+### 2.4 Platform & Domain Verification Tables
 
-Reviewers MUST cross-reference changes against the following mandatory platform domain tables:
+Reviewers MUST cross-reference changes against generic architecture checks plus any detected optional domain profile (such as `resources/stacks/discord-bot-customizer.md` for Discord bot / OpenType canvas compositor repos):
 
-#### Discord & Gateway Integration Domain Checks
-| Subsystem / Rule | Requirement & Detection Signal | Severity if Violated |
-| :--- | :--- | :--- |
-| **3,000ms Interaction SLA** | All slash commands, buttons, and select menu handlers MUST call `deferReply()` / `deferEdit()` before database lookups, external HTTP calls, or async processing. | **CRITICAL** (`CHANGES_REQUESTED`) |
-| **DM Context Mentions** | DMs have NO guild context. Role snowflakes `<@&role_id>` render as `@unknown-role`. Direct message templates MUST use plain text `{roleName}`. | **HIGH** (`CHANGES_REQUESTED`) |
-| **Component V2 Nesting** | Interactive components (buttons, selects) MUST reside inside valid `ActionRow` container components and cannot escape container bounds. | **HIGH** (`CHANGES_REQUESTED`) |
-
-#### Next.js & Frontend Architecture Domain Checks
+#### Frontend Architecture & Compositor Domain Checks
 | Subsystem / Rule | Requirement & Detection Signal | Severity if Violated |
 | :--- | :--- | :--- |
 | **Single Routing Root** | Root `app/` and `src/app/` MUST NOT coexist. Root `app/` shadows `src/app/`, creating silent collision and rendering defects. Conflicting directories must be eliminated. | **CRITICAL** (`CHANGES_REQUESTED`) |
-| **No Solo Typecheck** | `npx tsc --noEmit` validates types only, NOT runtime rendering. Every UI component task MUST include automated render/mount tests (React Testing Library / Vitest). | **HIGH** (`CHANGES_REQUESTED`) |
+| **No Solo Typecheck** | `npx tsc --noEmit` validates types only, NOT runtime rendering. Every UI component task MUST include automated render/mount tests (React Testing Library / Vitest) or end-to-end verification. | **HIGH** (`CHANGES_REQUESTED`) |
 | **No `localStorage` Fallback** | Production API clients (`lib/api.ts`) MUST NOT catch HTTP errors and silently return `localStorage` dummy payloads. Violates AP-001. Errors must propagate. | **CRITICAL** (`CHANGES_REQUESTED`) |
-| **Revocation of Aesthetic Immunity** | Reviewers MUST reject UI clutter, developer test buttons, unhandled overflow, and cartoonish novelty geometry. Active canvas elements MUST provide `#E92738` selection borders and 4 corner grips. Canvas grids must maintain $\ge 3:1$ contrast. | **HIGH** (`CHANGES_REQUESTED`) |
-| **Compositor Vector Parity** | Image compositors MUST render vector text via `opentype.js` Bezier curves (`<path d="...">`), normalize relative URLs to `DATA_DIR`, and assert buffer $> 50$KB with luminance standard deviation $> 15.0$. | **CRITICAL** (`CHANGES_REQUESTED`) |
-| **Mobile Pointer Parity** | Canvas and drag surfaces MUST declare `touch-action: pan-y`, standardize on W3C Pointer Events (`onPointerDown`), and require a 10px directional movement threshold before calling `e.preventDefault()`. | **HIGH** (`CHANGES_REQUESTED`) |
+| **Revocation of Aesthetic Immunity** | Reviewers MUST reject UI clutter, developer test buttons, unhandled overflow, and decorative slop geometry outside the project's design system. Interactive drag canvases must expose clear focus/selection feedback and contrast $\ge 3:1$. | **HIGH** (`CHANGES_REQUESTED`) |
+| **Mobile Pointer Parity** | Canvas and drag surfaces MUST declare `touch-action: pan-y` (or `none` for 2D canvases), standardize on W3C Pointer Events (`onPointerDown`), and require a 10px directional movement threshold before calling `e.preventDefault()`. | **HIGH** (`CHANGES_REQUESTED`) |
+| **Optional Domain Profiles** | When `context.md` loads an optional profile (e.g., `resources/stacks/discord-bot-customizer.md` for `3,000ms` `deferReply()`, `/plugins`, `/api/welcomer/asset`, `#E92738` selection border, or `opentype.js` `>50KB` buffer parity), enforce that profile's full checklist. | **HIGH** (`CHANGES_REQUESTED`) |
 
 ---
 
@@ -77,3 +70,12 @@ To prevent infinite rejection cycles between orchestrators and reviewers, the re
    - **Circuit Breaker Rule**: If unresolved defects remain on Round 2, the reviewer MUST NOT issue another open-ended rejection. The reviewer MUST EITHER:
      - **Option A (Exact Patch Diff)**: Provide the exact drop-in unified patch diff necessary for the author to achieve immediate `LGTM`.
      - **Option B (Operator Escalation)**: If an irreconcilable architectural impasse exists, set status to `CHANGES_REQUESTED (CIRCUIT_BREAKER_TRIPPED)` and escalate directly to the human operator for explicit guidance.
+
+---
+
+## 4. Execution-Backed Proof Filter (`skills/adversarial-review/SKILL.md`)
+
+To prevent speculative theoretical noise from blocking valid implementations while catching real end-to-end failures:
+1. **Behavioral Claims Require Live Proof**: When flagging a functional bug, permission bypass, serialization mismatch, or UI regression (outside deterministic static lint/scanner rules), reviewers (`agents/adversarial-falsifier-reviewer.md`) MUST include the exact failing command/test output against the code under review.
+2. **Drop Unverified Speculation**: Concerns that cannot be reproduced, stylistic naming preferences, and "what-if" scenarios requiring unrelated future edits MUST be dropped from `CHANGES_REQUESTED` findings and summarized only in the Dropped table.
+3. **Attack Callers & End-to-End Integration**: Reviewers check downstream readers/writers (e.g., UI format written vs backend parser format read, parent toggle gates vs child switches) rather than rubber-stamping isolated unit mocks (`EP-06`, `EP-10`).
