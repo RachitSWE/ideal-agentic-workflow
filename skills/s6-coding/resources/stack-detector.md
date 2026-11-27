@@ -30,8 +30,8 @@ The agent MUST use this extracted information to determine which stack pack appl
 ### 2.2 Load Applicable Stack Packs & Dialect Resolution
 After identifying the framework from `GEMINI.md`, the agent MUST locate the corresponding file within the `resources/stacks/` directory.
 For frameworks with distinct architectural dialects (e.g. Next.js), the agent MUST inspect filesystem markers to load the exact dialect pack:
-- **Next.js App Router**: If `src/app/` or `app/` exists, load `resources/stacks/frontend/nextjs.md` and `rules/rules-frontend-nextjs.md`.
-- **Next.js Pages Router**: If `src/pages/` or `pages/` exists (without `src/app/`), load `resources/stacks/frontend/nextjs-pages.md` and `rules/rules-frontend-nextjs-pages.md`.
+- **Next.js App Router**: If `src/app/` or `app/` exists, load `resources/stacks/frontend/nextjs.md` and `resources/stack-rules/rules-frontend-nextjs.md`.
+- **Next.js Pages Router**: If `src/pages/` or `pages/` exists (without `src/app/`), load `resources/stacks/frontend/nextjs-pages.md` and `resources/stack-rules/rules-frontend-nextjs-pages.md`.
 The agent MUST read the contents of the resolved stack pack completely into its active context.
 The agent MUST explicitly memorize the "Architecture Rules" and "Common Anti-Patterns" defined within that specific stack pack.
 The agent MUST apply these loaded rules to every line of code generated during the S6 phase, ensuring total compliance with the project's idiomatic constraints.

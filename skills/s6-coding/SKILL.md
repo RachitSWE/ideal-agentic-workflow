@@ -1,6 +1,6 @@
 ---
 name: s6-coding
-description: "Executes the core code generation phase, strictly enforcing senior developer standards, stack architecture rules, and anti-pattern prevention."
+description: "Use after S4 plan approval (or bugfix repro) to implement production code and tests strictly within target_files while enforcing EP-01..EP-12, AP-001..AP-010, and detected resources/stack-rules/."
 ---
 
 # S6 Coding
@@ -21,31 +21,32 @@ The S6 phase explicitly bridges the gap between approved planning and automated 
 Before touching ANY source file, running commands, or creating classes, the orchestrating agent MUST explicitly call `view_file` on EVERY file listed below (global standards, anti-patterns, and active stack rules/pack). Coding without loading stack invariants into context violates **AP-009 (Unread Context Execution)**.
 
 1. **Global Senior Developer Standards & Guidelines**:
-   - `rules/AGENTS.md` (Global senior developer invariants AP-001 through AP-008)
+   - `rules/AGENTS.md` (Global behavioral charter: `AP-001` through `AP-010`, `EP-01` through `EP-12`, and strict modularity)
    - `resources/senior-dev-standards.md` (Production engineering idioms, naming, and architectural alignment)
    - `resources/error-handling-guide.md` (Disciplined typed error patterns, eliminating catch-all suppressions)
    - `resources/test-driven-development-guide.md` (TDD conventions and test structure standards)
 2. **Phase Guidelines & Anti-Pattern Registry**:
-   - `skills/s6-coding/resources/anti-patterns.md` (Canonical catalog of forbidden anti-patterns: AP-001 through AP-008)
+   - `skills/s6-coding/resources/anti-patterns.md` (Canonical catalog of forbidden anti-patterns: `AP-001` through `AP-010`)
    - `skills/s6-coding/resources/stack-detector.md` (Signatures for detecting framework, runtime, and package conventions)
-3. **Detected Stack Pack & Invariant Rules** (Load the active stack files identified during S1):
+3. **Detected Stack Pack & On-Demand Stack Rules** (Load the active stack files identified during S1):
    - **Database Subsystems**:
-     - `resources/stacks/database/mongodb.md` & `rules/rules-database-mongodb.md`
-     - `resources/stacks/database/redis.md` & `rules/rules-database-redis.md`
-     - `resources/stacks/database/postgresql.md` & `rules/rules-database-postgresql.md`
+     - `resources/stacks/database/mongodb.md` & `resources/stack-rules/rules-database-mongodb.md`
+     - `resources/stacks/database/redis.md` & `resources/stack-rules/rules-database-redis.md`
+     - `resources/stacks/database/postgresql.md` & `resources/stack-rules/rules-database-postgresql.md`
    - **Backend Subsystems**:
-     - `resources/stacks/backend/backend-java.md` & `rules/rules-backend-java.md`
-     - `resources/stacks/backend/java-databases.md` & `rules/rules-backend-java-databases.md`
-     - `resources/stacks/backend/backend-python.md` & `rules/rules-backend-python.md`
-     - `resources/stacks/backend/python-databases.md` & `rules/rules-backend-python-databases.md`
-     - `resources/stacks/backend/backend-rust.md` & `rules/rules-backend-rust.md`
-     - `resources/stacks/backend/rust-databases.md` & `rules/rules-backend-rust-databases.md`
+     - `resources/stacks/backend/backend-java.md` & `resources/stack-rules/rules-backend-java.md`
+     - `resources/stacks/backend/java-databases.md` & `resources/stack-rules/rules-backend-java-databases.md`
+     - `resources/stacks/backend/backend-python.md` & `resources/stack-rules/rules-backend-python.md`
+     - `resources/stacks/backend/python-databases.md` & `resources/stack-rules/rules-backend-python-databases.md`
+     - `resources/stacks/backend/backend-rust.md` & `resources/stack-rules/rules-backend-rust.md`
+     - `resources/stacks/backend/rust-databases.md` & `resources/stack-rules/rules-backend-rust-databases.md`
    - **Frontend Subsystems**:
-     - `resources/stacks/frontend/nextjs.md` & `rules/rules-frontend-nextjs.md`
-     - `resources/stacks/frontend/angular.md` & `rules/rules-frontend-angular.md`
+     - `resources/stacks/frontend/nextjs.md` & `resources/stack-rules/rules-frontend-nextjs.md`
+     - `resources/stacks/frontend/nextjs-pages.md` & `resources/stack-rules/rules-frontend-nextjs-pages.md`
+     - `resources/stacks/frontend/angular.md` & `resources/stack-rules/rules-frontend-angular.md`
    - **Minecraft Modding Subsystems**:
-     - `resources/stacks/minecraft/mc-fabric.md` & `rules/rules-minecraft-fabric.md`
-     - `resources/stacks/minecraft/mc-forge.md` & `rules/rules-minecraft-forge.md`
+     - `resources/stacks/minecraft/mc-fabric.md` & `resources/stack-rules/rules-minecraft-fabric.md`
+     - `resources/stacks/minecraft/mc-forge.md` & `resources/stack-rules/rules-minecraft-forge.md`
    - **Stack Composer & Extensibility**:
      - `resources/stacks/_stack-composer.md`
 4. **Specialist Subagent Personas** (Adopt or consult based on the detected stack and active task):
@@ -82,12 +83,13 @@ Once the architecture is understood, the agent MUST select the lowest-indexed in
 The agent MUST immediately mark this selected task with the `[/]` notation to indicate that work is actively in progress.
 The agent MUST isolate its focus to this single task, refusing to address unrelated issues or future steps until the current task is fully resolved.
 Under the **Scope Jail Architecture**, file modifications must strictly adhere to declared `target_files` and `infrastructure_files` for the active task marked `[/]` in `task.md`, verified at Gate 4 by `commands/verify-scope.ps1`.
-Under RULE-ENG-02 (State Lineage & Layout Boundary Infrastructure), if the active task produces or consumes application state displayed in shared layout shells (Header, Sidebar, Navigation, Status Bar) or encounters an ancestor containing-block trap (e.g. `will-change: transform` trapping fixed bars under BUG-001), updating the shared context provider or layout shell (`DashboardShell.tsx`, `_app.tsx`, `layout.tsx`) is classified as mandatory state infrastructure and is explicitly authorized. To modify an ancestor layout file not in `target_files`, the agent MUST execute `pwsh -File commands/escalate-scope.ps1 -TaskId [TASK-ID] -File "[path]" -Rationale "[reason]"` to legally whitelist the file in `infrastructure_files` before editing.
+Under RULE-ENG-02 (State Lineage & Layout Boundary Infrastructure), if the active task produces or consumes application state displayed in shared layout shells (Header, Sidebar, Navigation, Status Bar) or encounters an ancestor containing-block trap (e.g. `will-change: transform` trapping fixed bars), updating the shared context provider or layout shell (`DashboardShell.tsx`, `_app.tsx`, `layout.tsx`) is classified as mandatory state infrastructure and is explicitly authorized. To modify an ancestor layout file not in `target_files`, execute `powershell|pwsh -File commands/escalate-scope.ps1 -TaskId [TASK-ID] -File "[path]" -Rationale "[reason]"` to legally whitelist the file in `infrastructure_files` before editing.
 Under RULE-ENG-01 (Closed Vertical Slices), the agent MUST connect all interactive mutations to real endpoints or concrete clients; disguising unfinished logic under "Local Demo" or "Preview" badges violates AP-001 and is strictly forbidden.
 
-### 3.2 Anti-Pattern Enforcement and Post-Coding Check
-During the actual code generation process, the agent MUST explicitly enforce all constraints defined in the `skills/s6-coding/resources/anti-patterns.md` registry. 
-The agent MUST guarantee zero simulation code, zero verbose comments, zero TODOs, and zero instances of compiler appeasement.
+### 3.2 Anti-Pattern Enforcement, Blast Radius & Comment Audit
+During the actual code generation process, the agent MUST explicitly enforce all constraints defined in the `skills/s6-coding/resources/anti-patterns.md` registry and `rules/AGENTS.md` (`AP-001..AP-010`, `EP-01..EP-12`, strictly `1 OOP type per file`, `<= 1` component / `<= 2 inline JSX children` per `.tsx`).
+For cross-module edits or shared infrastructure, consult `skills/design-architect/SKILL.md` and run a `skills/blast-radius/SKILL.md` probe before finalizing changes.
+Before declaring coding done and handing off to S7/S8, run `skills/comment-audit/SKILL.md` (`agents/comment-hygiene-reviewer.md`) on modified diffs to strip `AP-002` narration/dead comments and catch `AP-004` suppressions.
 Upon completing the code generation for the selected task, the agent MUST perform a rigorous self-audit before declaring the work finished.
 The agent MUST mandate and execute this precise post-coding check: "Mentally check every named anti-pattern against the code just written. If any matches, fix before proceeding to S7".
 The agent MUST NOT transition to the automated testing phase until it is absolutely certain no anti-patterns remain in the generated files.
