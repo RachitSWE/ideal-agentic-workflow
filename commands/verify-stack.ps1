@@ -91,7 +91,7 @@ function Run-CommandSafely([string]$label, [string]$cmd) {
 }
 
 # Resolve plugin script root
-$pluginScriptsDir = Join-Path $PSScriptRoot "..\scripts"
+$pluginScriptsDir = Join-Path $PSScriptRoot "../scripts"
 $checkUiSlop = Join-Path $pluginScriptsDir "check-ui-slop.mjs"
 $checkLayoutAst = Join-Path $pluginScriptsDir "check-layout-ast.mjs"
 $checkGestureParity = Join-Path $pluginScriptsDir "check-gesture-parity.mjs"
@@ -263,7 +263,8 @@ switch ($Stack) {
 # Gate 4: Pre-Review Mechanical Scope Gate
 $verifyScopeScript = Join-Path $PSScriptRoot "verify-scope.ps1"
 if (Test-Path $verifyScopeScript) {
-    Run-CommandSafely "Gate 4: Mechanical Scope Compliance Check" "pwsh -File `"$verifyScopeScript`""
+    $psCmd = if (Get-Command pwsh -ErrorAction SilentlyContinue) { "pwsh" } else { "powershell" }
+    Run-CommandSafely "Gate 4: Mechanical Scope Compliance Check" "$psCmd -File `"$verifyScopeScript`""
 }
 
 Write-Success "All verification tiers passed successfully for $Stack."

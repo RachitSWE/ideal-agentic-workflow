@@ -26,10 +26,10 @@ if (-not $Sha) {
 }
 
 $date = (Get-Date).ToString("yyyy-MM-dd")
-$sessionDir = Join-Path ".agents\specs" "session-$Sha"
+$sessionDir = Join-Path ".agents/specs" "session-$Sha"
 $grillDir = Join-Path $sessionDir "grill"
-$submitDir = Join-Path $sessionDir "code-review\submit"
-$reviewDir = Join-Path $sessionDir "code-review\review"
+$submitDir = Join-Path $sessionDir "code-review/submit"
+$reviewDir = Join-Path $sessionDir "code-review/review"
 
 Write-Host "[INIT-SPEC] Initializing Spec Session [$Sha] for feature '$Name'..." -ForegroundColor Cyan
 

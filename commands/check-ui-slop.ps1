@@ -11,7 +11,7 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$scriptPath = Join-Path $PSScriptRoot "..\scripts\check-ui-slop.mjs"
+$scriptPath = Join-Path $PSScriptRoot "../scripts/check-ui-slop.mjs"
 if (-not (Test-Path $scriptPath)) {
     Write-Host "[CHECK-UI-SLOP] [ERROR] Could not find scripts/check-ui-slop.mjs" -ForegroundColor Red
     exit 1

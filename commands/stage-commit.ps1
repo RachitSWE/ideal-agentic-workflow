@@ -11,9 +11,9 @@
 .PARAMETER Scope
     Optional scope in parentheses, e.g. 'auth', 'database', 'api'.
 .PARAMETER Subject
-    Subject line: max 72 chars, lowercase, imperative mood, no period at end.
+    Subject line: recommended <= 72 chars (100 hard limit), lowercase type(scope), preserve PascalCase/camelCase code identifiers, imperative mood, no trailing period.
 .PARAMETER Body
-    Mandatory commit body: explaining rationale/manifest and atomic justification. Max 150 chars in Mode A (or 300 chars in Mode B manifest).
+    Mandatory commit body: explaining technical mechanism/rationale and atomic justification (recommended <= 150 chars, 180 hard limit in Mode A; 300 in Mode B manifest). Preserve exact code identifier casing.
 .PARAMETER Scaffold
     Optional switch to enable Mode B (Scaffold / Refactor Mode) permitting directory-scoped staging for cohesive scaffolding.
 .EXAMPLE
@@ -62,11 +62,14 @@ foreach ($f in $Files) {
         Write-Fail "AP-005 VIOLATION: Blind bulk staging ('$trimmed') is strictly prohibited. Provide explicit file paths or directory paths with -Scaffold."
         exit 1
     }
-    if (-not (Test-Path $trimmed)) {
-        Write-Fail "Target path not found: '$trimmed'"
-        exit 1
+    if (-not (Test-Path -LiteralPath $trimmed)) {
+        git ls-files --error-unmatch -- $trimmed *> $null
+        if ($LASTEXITCODE -ne 0) {
+            Write-Fail "Target path not found: '$trimmed'"
+            exit 1
+        }
     }
-    if (-not $Scaffold -and (Test-Path $trimmed -PathType Container)) {
+    if (-not $Scaffold -and (Test-Path -LiteralPath $trimmed -PathType Container)) {
         Write-Fail "AP-005 VIOLATION: Directory path '$trimmed' cannot be staged in Surgical Mode. Use -Scaffold switch for directory-scoped scaffolding (>= 15 files)."
         exit 1
     }
@@ -75,9 +78,11 @@ foreach ($f in $Files) {
 # 2. Validation: Subject line formatting
 $formattedSubject = if ($Scope) { "$Type($Scope): $Subject" } else { "$Type`: $Subject" }
 
-if ($formattedSubject.Length -gt 72) {
-    Write-Fail "Commit subject line exceeds 72 characters ($($formattedSubject.Length) chars): '$formattedSubject'"
+if ($formattedSubject.Length -gt 100) {
+    Write-Fail "Commit subject line exceeds hard 100-character limit ($($formattedSubject.Length) chars): '$formattedSubject'"
     exit 1
+} elseif ($formattedSubject.Length -gt 72) {
+    Write-Host "[STAGE-COMMIT] [WARNING] Commit subject exceeds recommended 72 chars ($($formattedSubject.Length) chars)." -ForegroundColor Yellow
 }
 
 if ($formattedSubject.EndsWith(".")) {
@@ -91,9 +96,11 @@ if ([string]::IsNullOrWhiteSpace($Body)) {
     exit 1
 }
 
-if (-not $Scaffold -and $Body.Length -gt 150) {
-    Write-Fail "Commit body exceeds 150 characters ($($Body.Length) chars). Keep body concise."
+if (-not $Scaffold -and $Body.Length -gt 180) {
+    Write-Fail "Commit body exceeds hard 180-character limit ($($Body.Length) chars). Keep body concise."
     exit 1
+} elseif (-not $Scaffold -and $Body.Length -gt 150) {
+    Write-Host "[STAGE-COMMIT] [WARNING] Commit body exceeds recommended 150 chars ($($Body.Length) chars)." -ForegroundColor Yellow
 } elseif ($Scaffold -and $Body.Length -gt 300) {
     Write-Fail "Scaffold commit manifest body exceeds 300 characters ($($Body.Length) chars)."
     exit 1
@@ -107,10 +114,16 @@ if ($Scaffold -and $Body.Length -lt 15) {
 # 4. Stage each target path (file or directory)
 Write-Step "Staging $($Files.Count) explicit target path(s)..."
 foreach ($f in $Files) {
-    Write-Step "  -> git add `"$f`""
-    git add $f
+    $trimmed = $f.Trim()
+    if (Test-Path -LiteralPath $trimmed) {
+        Write-Step "  -> git add -- `"$trimmed`""
+        git add -- $trimmed
+    } else {
+        Write-Step "  -> git rm -- `"$trimmed`""
+        git rm -- $trimmed
+    }
     if ($LASTEXITCODE -ne 0) {
-        Write-Fail "Failed to stage target: $f"
+        Write-Fail "Failed to stage target: $trimmed"
         exit 1
     }
 }
@@ -131,9 +144,9 @@ if ($insertions -gt 150 -and -not $Scaffold) {
     Write-Step "Scaffold mode active: verified directory staging with $insertions insertions and structured manifest."
 }
 
-# 6. Execute Git Commit
+# 6. Execute Git Commit (preserve exact PascalCase/camelCase code identifiers in body)
 Write-Step "Executing commit with Conventional Commit schema..."
-$commitArgs = @("commit", "-m", $formattedSubject, "-m", $Body.ToLowerInvariant())
+$commitArgs = @("commit", "-m", $formattedSubject, "-m", $Body)
 git @commitArgs
 
 if ($LASTEXITCODE -eq 0) {
