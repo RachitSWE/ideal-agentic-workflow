@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![Version](https://img.shields.io/badge/version-1.3.4-blue.svg)](plugin.json)
+[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](plugin.json)
 [![Author](https://img.shields.io/badge/author-RachitSWE-green.svg)](https://github.com/RachitSWE)
 [![Platform](https://img.shields.io/badge/platform-Google%20Antigravity-orange.svg)](https://antigravity.google)
 [![Verification Suite](https://img.shields.io/badge/verification-7%2F7%20passing-brightgreen.svg)](scripts/verify-file-citations.js)
@@ -17,7 +17,7 @@
 [S0–S11 Implementation Pipeline](#-s0s11-implementation-pipeline) •
 [SP1–SP6 Spec Pipeline](#-sp1sp6-spec-architecture-pipeline) •
 [Operating Modes](#-operating-modes) •
-[Subagent Ecosystem](#-subagent-ecosystem-34-agents) •
+[Subagent Ecosystem](#-subagent-ecosystem-38-agents) •
 [Stack Packs & Rules](#-technology-stack-packs--rules) •
 [Automation Commands](#-automation-commands) •
 [Verification Suite](#-verification--quality-suite) •
@@ -38,8 +38,12 @@
   - Revokes "aesthetic immunity" in code reviews. AST linters, UI slop detection ([`commands/check-ui-slop.ps1`](commands/check-ui-slop.ps1)), and headless smoke gates ([`resources/smoke-templates/`](resources/smoke-templates/)) mechanically enforce viewport clamping, 1:1 avatars, 10px gesture thresholds, and image buffer entropy (> 50KB, std-dev > 15.0).
 - **Domain-Driven Targeted Testing (DTT)**:
   - Accelerates inner-loop feature iterations by executing domain-filtered unit and slice tests (`mvn test -Dtest=...`, `vitest path`, etc.) rather than running hundreds of tests on every single commit. Full suite verification is strictly gated at S10 pre-commit.
-- **34 Subagent Definitions**:
-  - Full matrix of S2 auditors, S6 framework specialists, S8 code reviewers, and SP4 spec reviewers ensuring zero self-review and objective consensus.
+- **38 Subagent Definitions**:
+  - Full matrix of S2 auditors, S6 framework specialists, S8 code reviewers, SP4 spec reviewers, plus `arena-cross-judge`, `empirical-worker`, `adversarial-falsifier-reviewer`, and `comment-hygiene-reviewer`.
+- **Option A Unified Router + Empirical Tracks (`S1` + `SessionStart` Hook)**:
+  - Consolidates global rules into [`rules/AGENTS.md`](rules/AGENTS.md) (`< 14 KB`, `AP-001..AP-010`, `EP-01..EP-12`) paired with [`hooks.json`](hooks.json) (`SessionStart`-only `scripts/session-bootstrap-hook.mjs` — zero `PreToolUse` blocking), routing features to `S2 -> S11` / `SP1 -> SP6` and empirical work to `/bugfix`, `/perf`, `/prototype`, `/investigate`, `/refactor`, `/autonomous`, and `/visual-parity`.
+- **Formal TLA+ `statechart`, Fault-Injection & Cluster-Aware S10 Auto-Committer**:
+  - Includes offline/online TLA+ statechart checking ([`skills/statechart/SKILL.md`](skills/statechart/SKILL.md), [`commands/invoke-statechart.ps1`](commands/invoke-statechart.ps1)), project-local harness generators ([`skills/verify-harness-generator/SKILL.md`](skills/verify-harness-generator/SKILL.md)), formula-safe TSV logs ([`commands/log-decision.ps1`](commands/log-decision.ps1)), and repo-agnostic clustered batch commits ([`scripts/auto-commit.mjs`](scripts/auto-commit.mjs), [`commands/auto-commit.ps1`](commands/auto-commit.ps1)).
 - **Strict Anti-Pattern Defense (AP-001 – AP-010)**:
   - Eliminates mock data in production paths, narrative/conversational comments, compiler appeasement hacks (`@ts-ignore`, `any`), bulk staging (`git add .`), state leakage outside `.agents/session-[SHA]/`, and self-review fabrication.
 - **Zero Token Spoofing**:
@@ -81,7 +85,7 @@ flowchart TD
 | **S3** | [`s3-planning`](skills/s3-planning/SKILL.md) | Scores tasks mathematically (`Severity × Complexity × Deps`), declares Scope Jail targets, generating `plan.md` and tagged `task.md`. |
 | **S4** | [`s4-plan-review`](skills/s4-plan-review/SKILL.md) | Spawns `plan-critic` subagents to review plan architecture; gates coding on unanimous `LGTM`. |
 | **S5** | [`s5-plan-fix`](skills/s5-plan-fix/SKILL.md) | Methodically resolves plan review criticisms, updating `plan.md` and `task.md` until consensus. |
-| **S6** | [`s6-coding`](skills/s6-coding/SKILL.md) | Implements **exactly ONE task**, constrained by Scope Jail hooks, consults framework specialists, and enforces anti-pattern defenses. |
+| **S6** | [`s6-coding`](skills/s6-coding/SKILL.md) | Implements **exactly ONE task**, constrained by Scope Jail `target_files` (`commands/verify-scope.ps1`), runs `comment-audit`, and enforces `EP-01..EP-12` + `AP-001..AP-010`. |
 | **S7** | [`s7-testing`](skills/s7-testing/SKILL.md) | Executes 5-tier checks: Static Typecheck $\to$ AST & Slop Scanners $\to$ **Domain Targeted Tests** $\to$ Headless Smoke Gates $\to$ Scope Diff Gate. |
 | **S8** | [`s8-code-review`](skills/s8-code-review/SKILL.md) | Dispatches stack-specific reviewers with aesthetic immunity revoked, requiring mechanical verification logs for consensus sign-off. |
 | **S9** | [`s9-bug-fix`](skills/s9-bug-fix/SKILL.md) | Surgically remediates review findings, mandates 100% test re-pass via S7, and resubmits for LGTM. |
@@ -119,14 +123,21 @@ The workflow adjusts its execution overhead dynamically based on the session tri
 
 | Mode | Trigger Keyword | Profile & Behavior | Ideal Use Cases |
 | :--- | :--- | :--- | :--- |
-| **Standard Mode** | *(default)* | Full S1–S11 lifecycle with multi-agent audits and multi-reviewer consensus. | Core features, major refactors, complex bug fixes |
+| **Standard Mode** | *(default)* | Full S1–S11 lifecycle (`Option A` S3–S4 gates). | Core features, migrations, cross-boundary arch |
+| **Bugfix Track** | `/bugfix` | Live reproduction & runtime/trace forensics -> minimal fix. | Defects, regressions, stack traces |
+| **Perf / Hillclimb Track** | `/perf`, `/hillclimb` | Frozen benchmark harness -> single-hypothesis mantra optimization + `benchmark-audit`. | Latency, memory, throughput tuning |
+| **Prototype Track** | `/prototype` | Isolated throwaway variants behind a switcher before committing to prod. | Layout / timing / API design forks |
+| **Investigation Track** | `/investigate` | Read-only cited explanation or git-history tradeoff table (`0` edits). | Architecture Q&A, *"why?"* analysis |
+| **Refactor Track** | `/refactor` | Equivalence-pinned structural simplification (`EP-04`). | Deduplication, caller migration |
+| **Autonomous Track** | `/autonomous`, `/goal` | Predicate-locked loop logging hypotheses via `commands/log-decision.ps1`. | Unattended / multi-iteration fixes |
+| **Visual Parity Track** | `/visual-parity` | Baseline screenshot-diff lock (`browser` subagent) across UI states. | Pixel-exact UI migrations |
 | **Fast Mode** | `/fast mode` | Single-task fixes ($\le 3$ files, 100 LOC), bypasses S2 if audit $\le 7$ days old, spawns 1 reviewer. | Quick bug fixes, tight patches |
 | **Trivial Mode** | `/trivial` | Documentation or chores only. Skips audit, review, and tests. Single `docs`/`chore` commit. | Documentation, README updates, comments, chores |
 | **Duolithic Mode** | `/duolithic mode` | Offloads heavy subagent reviews to an external conversation ("R-Agent") to preserve context window. | Large codebases, massive refactors, deep reviews |
 
 ---
 
-## 🤖 Subagent Ecosystem (34 Agents)
+## 🤖 Subagent Ecosystem (38 Agents)
 
 All subagents conform to the Antigravity specification in [`agents/`](agents/):
 
@@ -171,29 +182,34 @@ All subagents conform to the Antigravity specification in [`agents/`](agents/):
 - [`agents/mongo-redis-reviewer.md`](agents/mongo-redis-reviewer.md): Enforces NoSQL injection defense, mandatory Redis TTLs, and keyspace namespacing.
 - [`agents/mc-fabric-reviewer.md`](agents/mc-fabric-reviewer.md): Enforces client/server isolation, zero `@Overwrite` mixins, and 20 TPS constraints.
 - [`agents/mc-neoforge-reviewer.md`](agents/mc-neoforge-reviewer.md): Enforces `DeferredRegister` mandate and `Dist.CLIENT` separation.
+- [`agents/arena-cross-judge.md`](agents/arena-cross-judge.md): Blind rubric scorer for [`skills/solution-arena/SKILL.md`](skills/solution-arena/SKILL.md).
+- [`agents/empirical-worker.md`](agents/empirical-worker.md): Isolated `swarm` worker for prototypes, arena candidates, and live forensics.
+- [`agents/adversarial-falsifier-reviewer.md`](agents/adversarial-falsifier-reviewer.md): Execution-backed S8 adversary keeping only bugs proven by live failing runs.
+- [`agents/comment-hygiene-reviewer.md`](agents/comment-hygiene-reviewer.md): Read-only comment & lint-suppression auditor (`AP-002`/`AP-004`).
 
 ---
 
 ## 📦 Technology Stack Packs & Rules
 
-Each supported ecosystem provides paired stack pack specifications ([`resources/stacks/`](resources/stacks/)) and enforceable invariant rule charters ([`rules/`](rules/)):
+Each supported ecosystem provides paired stack pack specifications ([`resources/stacks/`](resources/stacks/)) and on-demand invariant rule charters ([`resources/stack-rules/`](resources/stack-rules/)) loaded automatically via `SessionStart` (`hooks.json`):
 
 | Technology Stack | Stack Pack | Enforceable Rule Charter |
 | :--- | :--- | :--- |
-| **MongoDB** | [`database/mongodb.md`](resources/stacks/database/mongodb.md) | [`rules-database-mongodb.md`](rules/rules-database-mongodb.md) |
-| **Redis** | [`database/redis.md`](resources/stacks/database/redis.md) | [`rules-database-redis.md`](rules/rules-database-redis.md) |
-| **PostgreSQL** | [`database/postgresql.md`](resources/stacks/database/postgresql.md) | [`rules-database-postgresql.md`](rules/rules-database-postgresql.md) |
-| **Java Backend (Spring Boot)** | [`backend/backend-java.md`](resources/stacks/backend/backend-java.md) | [`rules-backend-java.md`](rules/rules-backend-java.md) |
-| **Java Databases (JPA, Mongo, Redis)** | [`backend/java-databases.md`](resources/stacks/backend/java-databases.md) | [`rules-backend-java-databases.md`](rules/rules-backend-java-databases.md) |
-| **Python Backend (FastAPI)** | [`backend/backend-python.md`](resources/stacks/backend/backend-python.md) | [`rules-backend-python.md`](rules/rules-backend-python.md) |
-| **Python Databases (SQLAlchemy, Motor)** | [`backend/python-databases.md`](resources/stacks/backend/python-databases.md) | [`rules-backend-python-databases.md`](rules/rules-backend-python-databases.md) |
-| **Rust Backend (Axum & Tokio)** | [`backend/backend-rust.md`](resources/stacks/backend/backend-rust.md) | [`rules-backend-rust.md`](rules/rules-backend-rust.md) |
-| **Rust Databases (SQLx, Mongo, Redis)** | [`backend/rust-databases.md`](resources/stacks/backend/rust-databases.md) | [`rules-backend-rust-databases.md`](rules/rules-backend-rust-databases.md) |
-| **Next.js & React 19 (App Router)** | [`frontend/nextjs.md`](resources/stacks/frontend/nextjs.md) | [`rules-frontend-nextjs.md`](rules/rules-frontend-nextjs.md) |
-| **Next.js (Pages Router)** | [`frontend/nextjs-pages.md`](resources/stacks/frontend/nextjs-pages.md) | [`rules-frontend-nextjs-pages.md`](rules/rules-frontend-nextjs-pages.md) |
-| **Angular 20/21 LTS (Signals & Zoneless)** | [`frontend/angular.md`](resources/stacks/frontend/angular.md) | [`rules-frontend-angular.md`](rules/rules-frontend-angular.md) |
-| **Minecraft Fabric** | [`minecraft/mc-fabric.md`](resources/stacks/minecraft/mc-fabric.md) | [`rules-minecraft-fabric.md`](rules/rules-minecraft-fabric.md) |
-| **Minecraft NeoForge / Forge** | [`minecraft/mc-forge.md`](resources/stacks/minecraft/mc-forge.md) | [`rules-minecraft-forge.md`](rules/rules-minecraft-forge.md) |
+| **MongoDB** | [`database/mongodb.md`](resources/stacks/database/mongodb.md) | [`rules-database-mongodb.md`](resources/stack-rules/rules-database-mongodb.md) |
+| **Redis** | [`database/redis.md`](resources/stacks/database/redis.md) | [`rules-database-redis.md`](resources/stack-rules/rules-database-redis.md) |
+| **PostgreSQL** | [`database/postgresql.md`](resources/stacks/database/postgresql.md) | [`rules-database-postgresql.md`](resources/stack-rules/rules-database-postgresql.md) |
+| **Java Backend (Spring Boot)** | [`backend/backend-java.md`](resources/stacks/backend/backend-java.md) | [`rules-backend-java.md`](resources/stack-rules/rules-backend-java.md) |
+| **Java Databases (JPA, Mongo, Redis)** | [`backend/java-databases.md`](resources/stacks/backend/java-databases.md) | [`rules-backend-java-databases.md`](resources/stack-rules/rules-backend-java-databases.md) |
+| **Python Backend (FastAPI)** | [`backend/backend-python.md`](resources/stacks/backend/backend-python.md) | [`rules-backend-python.md`](resources/stack-rules/rules-backend-python.md) |
+| **Python Databases (SQLAlchemy, Motor)** | [`backend/python-databases.md`](resources/stacks/backend/python-databases.md) | [`rules-backend-python-databases.md`](resources/stack-rules/rules-backend-python-databases.md) |
+| **Rust Backend (Axum & Tokio)** | [`backend/backend-rust.md`](resources/stacks/backend/backend-rust.md) | [`rules-backend-rust.md`](resources/stack-rules/rules-backend-rust.md) |
+| **Rust Databases (SQLx, Mongo, Redis)** | [`backend/rust-databases.md`](resources/stacks/backend/rust-databases.md) | [`rules-backend-rust-databases.md`](resources/stack-rules/rules-backend-rust-databases.md) |
+| **Next.js & React 19 (App Router)** | [`frontend/nextjs.md`](resources/stacks/frontend/nextjs.md) | [`rules-frontend-nextjs.md`](resources/stack-rules/rules-frontend-nextjs.md) |
+| **Next.js (Pages Router)** | [`frontend/nextjs-pages.md`](resources/stacks/frontend/nextjs-pages.md) | [`rules-frontend-nextjs-pages.md`](resources/stack-rules/rules-frontend-nextjs-pages.md) |
+| **Angular 20/21 LTS (Signals & Zoneless)** | [`frontend/angular.md`](resources/stacks/frontend/angular.md) | [`rules-frontend-angular.md`](resources/stack-rules/rules-frontend-angular.md) |
+| **Minecraft Fabric** | [`minecraft/mc-fabric.md`](resources/stacks/minecraft/mc-fabric.md) | [`rules-minecraft-fabric.md`](resources/stack-rules/rules-minecraft-fabric.md) |
+| **Minecraft NeoForge / Forge** | [`minecraft/mc-forge.md`](resources/stacks/minecraft/mc-forge.md) | [`rules-minecraft-forge.md`](resources/stack-rules/rules-minecraft-forge.md) |
+| **Discord Bot & Vector Canvas (Optional)** | [`discord-bot-customizer.md`](resources/stacks/discord-bot-customizer.md) | [`rules-discord-bot-customizer.md`](resources/stack-rules/rules-discord-bot-customizer.md) |
 | **Stack Composer Engine** | [`_stack-composer.md`](resources/stacks/_stack-composer.md) | [`AGENTS.md`](rules/AGENTS.md) |
 | **Stack Pack Extensibility** | [`_stack-pack-creator.md`](resources/stacks/_stack-pack-creator.md) | [`AGENTS.md`](rules/AGENTS.md) |
 | **Persona Extensibility** | [`_persona-creator.md`](resources/_persona-creator.md) | [`resources/_persona-creator.md`](resources/_persona-creator.md) |
@@ -223,7 +239,7 @@ All agents, auditors, and reviewers actively detect and reject violations of the
 To bootstrap an autonomous session with automatic tech stack detection and pre-configured reviewer assignment:
 
 ```powershell
-pwsh scripts/start-session.ps1 -Mode standard
+powershell|pwsh -File scripts/start-session.ps1 -Mode standard
 ```
 
 ### Automation Commands
@@ -239,7 +255,10 @@ Cross-platform PowerShell automation scripts located in [`commands/`](commands/)
 | [`commands/escalate-scope.ps1`](commands/escalate-scope.ps1) | Whitelists ancestor layout or shared infrastructure files into `task.md` with audit logging. |
 | [`commands/verify-scope.ps1`](commands/verify-scope.ps1) | Pre-review Git diff scope gate verifying modified files strictly match declared `task.md` targets. |
 | [`commands/measure-diff.ps1`](commands/measure-diff.ps1) | Measures git diff insertions, modified file counts, and alerts if commit exceeds $\le 150$ LOC budget. |
-| [`commands/stage-commit.ps1`](commands/stage-commit.ps1) | Performs surgical per-file staging, validates Conventional Commit syntax, and verifies mandatory bodies. |
+| [`commands/auto-commit.ps1`](commands/auto-commit.ps1) | Runs clustered S10 batch auto-commits via [`scripts/auto-commit.mjs`](scripts/auto-commit.mjs) without `git add .` or `git push`. |
+| [`commands/invoke-statechart.ps1`](commands/invoke-statechart.ps1) | Executes TLA+ model checking & Mermaid statechart generation (`skills/statechart/scripts/statechart.ts`). |
+| [`commands/log-decision.ps1`](commands/log-decision.ps1) | Appends formula-safe 7-column TSV rows into `.agents/session-[SHA]/decision.tsv`. |
+| [`commands/stage-commit.ps1`](commands/stage-commit.ps1) | Performs surgical per-file staging, validates Conventional Commit syntax, and preserves exact identifier casing. |
 | [`commands/sync-spec-gemini.ps1`](commands/sync-spec-gemini.ps1) | Non-destructively links certified specs from `.agents/specs/` into `GEMINI.md §5 Open Features`. |
 | [`commands/clean-session.ps1`](commands/clean-session.ps1) | Safely archives completed sessions into `.agents/archive/` and prunes stale directories. |
 
@@ -247,28 +266,30 @@ Cross-platform PowerShell automation scripts located in [`commands/`](commands/)
 
 ## 🚀 How to Invoke
 
-Copy the formatted invocation prompt into your chat session to begin:
+Copy the formatted invocation prompt into your chat session to begin (or ask `skills/workflow-guide/SKILL.md` for help selecting a track):
 
-- **For Feature Implementation (S0–S11)**: Refer to [**`INVOCATION.md`**](INVOCATION.md) (or [`resources/workflow-invocation-prompt.md`](resources/workflow-invocation-prompt.md)).
+- **For Feature Implementation (S0–S11 & Empirical Tracks)**: Refer to [**`INVOCATION.md`**](INVOCATION.md) (or [`resources/workflow-invocation-prompt.md`](resources/workflow-invocation-prompt.md)).
 - **For Feature Specification (SP1–SP6)**: Refer to [**`INVOCATION-SPEC.md`**](INVOCATION-SPEC.md) (or [`resources/spec-invocation-prompt.md`](resources/spec-invocation-prompt.md)).
 
 ---
 
 ## 🧪 Verification & Quality Suite
 
-The plugin includes an autonomous Node.js regression test suite verifying 100% citation coverage and link validity:
+Run the complete plugin verification suite (citations, `SessionStart` hook, structural & hygiene checks, scanners/decision-log, auto-commit batches, and offline TLA+ `statechart` tests):
 
 ```bash
 node scripts/verify-file-citations.js
+node --test scripts/tests/*.test.mjs
+node --disable-warning=ExperimentalWarning --test skills/statechart/scripts/test/messages.test.ts skills/statechart/scripts/test/pipeline.test.ts skills/statechart/scripts/test/chart.test.ts skills/statechart/scripts/test/tlc-out.test.ts
 ```
 
 ### Verification Checks Enforced:
-1. **Zero Broken Citations**: Validates that all relative file paths cited physically exist on disk (150+ unique paths verified).
-2. **Subagent Coverage**: Validates that all 34 canonical subagent definitions in `agents/` are cited and accessible.
-3. **Rule Coverage**: Validates that all 15 invariant rules in `rules/` are cited.
-4. **Stack Pack Coverage**: Validates that all 16 stack packs and utilities in `resources/stacks/` are cited.
-5. **Command Script Coverage**: Validates that all 10 PowerShell automation scripts in `commands/` are cited.
-6. **Auxiliary Resources**: Validates that all 28 skill-local schemas, scripts, and templates are cited.
+1. **Zero Broken Citations**: Validates that all relative file paths cited physically exist on disk (including `hooks.json` entrypoints).
+2. **Subagent Coverage**: Validates that all 38 subagent definitions in `agents/` are cited and accessible.
+3. **Rule Coverage**: Validates consolidated `rules/AGENTS.md` and all 15 on-demand rule charters in `resources/stack-rules/`.
+4. **Stack Pack Coverage**: Validates that all stack packs and utilities in `resources/stacks/` are cited.
+5. **Command Script Coverage**: Validates that all 13 PowerShell automation scripts in `commands/` are cited.
+6. **Auxiliary Resources**: Validates all skill-local schemas, tracks, examples, and `skills/statechart/` entrypoints (`SKILL.md`, `references/render.md`, `scripts/statechart.ts`) are cited.
 7. **Token Efficiency**: Validates that invocation prompts contain 0 heavy ASCII box drawing characters.
 
 ---
