@@ -1,105 +1,70 @@
-# INVOKE: ideal-agentic-workflow (v1.3.4)
+# INVOKE: ideal-agentic-workflow (v2.0.0)
 
-## 1. Operating Mode (Select exactly one)
-- [x] **Standard** — Full S1–S11 lifecycle. Rigorous multi-agent engineering. (Default)
+## 1. Operating Mode / Task Track (Select one; defaults cleanly via S1)
+- [x] **Standard** — Full S1–S11 lifecycle (`Option A` S3–S4 plan & review gates for features/migrations).
+- [ ] **/bugfix** — Live repro & runtime/trace forensics -> minimal evidence-backed fix (`skills/s1-orchestrator/resources/tracks/bugfix-mode.md`).
+- [ ] **/perf /hillclimb** — Frozen harness baseline -> single-hypothesis tuning + `skills/benchmark-audit/SKILL.md` (`skills/s1-orchestrator/resources/tracks/perf-hillclimb-mode.md`).
+- [ ] **/prototype** — Isolated scratch variants (`skills/s1-orchestrator/resources/tracks/prototype-mode.md`).
+- [ ] **/investigate** — Read-only cited explanation (`skills/s1-orchestrator/resources/tracks/investigation-mode.md`).
+- [ ] **/refactor** — Contract-pinned structural cleanup (`skills/s1-orchestrator/resources/tracks/refactor-mode.md`).
+- [ ] **/autonomous /goal** — Predicate-locked loop with `commands/log-decision.ps1` (`skills/s1-orchestrator/resources/tracks/autonomous-mode.md`).
+- [ ] **/visual-parity** — Baseline screenshot-diff visual migration (`skills/s1-orchestrator/resources/tracks/visual-parity.md`).
 - [ ] **/fast mode** — Single-task (<= 3 files, 100 LOC), 1 reviewer, audit bypass.
 - [ ] **/trivial** — Docs/non-source changes only. Skips audit, review, and tests.
 - [ ] **/duolithic mode** — Heavy review offloaded to parallel R-Agent conversation.
 
 ## 2. Task Description
-<!-- Describe your task requirements, bug details, or feature spec here -->
+<!-- Describe your goal and checkable pass/fail verification criteria here -->
 [INSERT TASK DESCRIPTION HERE]
 
 ## 3. Skip List (Optional overrides)
-- [ ] **S0 — Repo Architect** (Skip if GEMINI.md is already certified)
-- [ ] **S2 — Codebase Audit** (Skip if audit.md exists and is <= 7 days old)
-- [ ] **S4 — Plan Review** (Skip to proceed directly from plan to code)
-- [ ] **S8 — Code Review** (Skip only if mode is /trivial)
+- [ ] **S0 — Repo Architect** (Skip if `GEMINI.md` is already certified)
+- [ ] **S2 — Codebase Audit** (Skip if `audit.md` exists and is <= 7 days old)
+- [ ] **S4 — Plan Review** (Allowed only on fast/empirical single-unit tracks)
+- [ ] **S8 — Code Review** (Skip only if mode is `/trivial` or read-only `/investigate`)
 
-*Fill in steps to skip this session (e.g., S0, S2):* None
+*Fill in steps to skip this session:* None
 
-## 4. Execution Lifecycle (S0–S11)
+## 4. Execution Lifecycle (S0–S11 & Empirical Tracks)
 
 ```mermaid
 flowchart TD
-    S0["S0 · Repo Architect"] -.-> S1["S1 · Ingestion & SHA"]
-    S1 --> S2["S2 · Codebase Audit"]
+    S0["S0 · Repo Architect"] -.-> S1["S1 · Ingestion, SHA & Track Router"]
+    S1 -- "Feature / Arch" --> S2["S2 · Codebase Audit"]
+    S1 -- "Empirical Track" --> ET["Bugfix / Perf / Prototype / Investigate / Refactor / Autonomous / Visual"]
     S2 --> S3["S3 · Planning (plan.md & task.md)"]
     S3 --> S4["S4 · Plan Review (Consensus)"]
     S4 -- "Changes" --> S5["S5 · Plan Fix Loop"]
     S5 --> S4
-    S4 -- "LGTM" --> S6["S6 · Coding ONE Task"]
-    S6 --> S7["S7 · Targeted Domain Testing"]
+    S4 -- "LGTM" --> S6["S6 · Coding ONE Task + Comment Audit"]
+    ET --> S7
+    S6 --> S7["S7 · 5-Tier + Fault-Injection + Harness"]
     S7 -- "Fail" --> S6
-    S7 -- "Pass" --> S8["S8 · Code Review (Domain Subagents)"]
+    S7 -- "Pass" --> S8["S8 · Execution-Backed Code Review"]
     S8 -- "Changes" --> S9["S9 · Bug Fix Loop"]
     S9 --> S7
-    S8 -- "LGTM" --> S10["S10 · Atomic Commit (<= 150 LOC)"]
-    S10 --> S11["S11 · Update GEMINI.md"]
+    S8 -- "LGTM" --> S10["S10 · Batch / Surgical Atomic Commit"]
+    S10 --> S11["S11 · Repo Hardening & GEMINI.md Sync"]
 ```
 
-### Step-by-Step Execution Directives & Mandatory Files to Read
+### Step-by-Step Directives & Mandatory Files
 
-- **S0 · Repo Architect** (Skill: `skills/s0-repo-architect/SKILL.md`):
-  - Mandatory Files: `skills/s0-repo-architect/schemas/gemini-prd-schema.json`, `skills/s0-repo-architect/schemas/anti-pattern-schema.json`, `skills/s0-repo-architect/templates/gemini-production-template.md`, `skills/s0-repo-architect/templates/directory-tree-explainer-template.txt`, `resources/gemini-template.md`.
-  - Automated Scripts: `skills/s0-repo-architect/scripts/generate-ascii-tree.js`, `skills/s0-repo-architect/scripts/verify-gemini-schema.js`.
-- **S1 · Ingestion & Scaffolding** (Skill: `skills/s1-orchestrator/SKILL.md`):
-  - Mandatory Files: `GEMINI.md`, `rules/AGENTS.md`, `skills/s1-orchestrator/resources/session-init.md`, `resources/checklist-template.md`, `resources/stacks/_stack-composer.md`.
-  - Operating Modes: `skills/s1-orchestrator/resources/fast-mode.md`, `skills/s1-orchestrator/resources/trivial-mode.md`, `skills/s1-orchestrator/resources/duolithic-mode.md`.
-  - Command: `pwsh -File commands/init-session.ps1`.
-- **S2 · Codebase Audit** (Skill: `skills/s2-codebase-audit/SKILL.md`):
-  - Audit Guides & Schemas: `resources/audit-template.md`, `skills/s2-codebase-audit/resources/audit-compiler.md`, `skills/s2-codebase-audit/resources/fullstack-persona-bank.md`, `skills/s2-codebase-audit/resources/minecraft-persona-bank.md`.
-  - Auditor Subagents: `agents/fullstack-architecture-auditor.md`, `agents/fullstack-security-reviewer.md`, `agents/fullstack-performance-seo-auditor.md`, `agents/fullstack-uiux-cro-auditor.md`, `agents/fullstack-test-quality-auditor.md`, `agents/postgres-hibernate-flyway-auditor.md`, `agents/mc-game-performance-auditor.md`, `agents/mc-mapping-compliance-auditor.md`, `agents/mc-mod-compatibility-auditor.md`, `agents/audit-compiler.md`.
-- **S3 · Planning** (Skill: `skills/s3-planning/SKILL.md`):
-  - Mandatory Schemas: `resources/plan-template.md`, `resources/task-template.md`, `skills/s3-planning/resources/priority-rubric.md`.
-  - Inputs: `GEMINI.md §2-§5`, `.agents/session-[SHA]/audit.md`, `.agents/session-[SHA]/context.md`.
-  - Scope Jail Targets: Mandate machine-readable YAML target schema (`target_files`, `infrastructure_files`) per task.
-- **S4 · Plan Review** (Skill: `skills/s4-plan-review/SKILL.md`):
-  - Review Guidelines & Templates: `agents/plan-critic.md`, `skills/s4-plan-review/resources/plan-review-guide.md`, `resources/submit-template.md`, `resources/review-template.md`.
-  - Target Plans: `.agents/session-[SHA]/plan.md`, `.agents/session-[SHA]/task.md`.
-- **S5 · Plan Fix Loop** (Skill: `skills/s5-plan-fix/SKILL.md`):
-  - Mandatory Files: `.agents/session-[SHA]/code-review/review/review(n).md`, `skills/s4-plan-review/resources/plan-review-guide.md`, `resources/submit-template.md`.
-- **S6 · Coding ONE Task** (Skill: `skills/s6-coding/SKILL.md`):
-  - Global Invariants: `rules/AGENTS.md`, `resources/senior-dev-standards.md`, `resources/error-handling-guide.md`, `resources/test-driven-development-guide.md`.
-  - Anti-Patterns & Stack Detection: `skills/s6-coding/resources/stack-detector.md`, `skills/s6-coding/resources/anti-patterns.md`.
-  - Active Stack Rules & Packs: Detected from `resources/stacks/*.md` and `rules/rules-*.md`.
-  - Scope Jail Enforcement: File mutations strictly scoped to declared target files and verified by `commands/verify-scope.ps1`. Escalate ancestor layout files via `pwsh -File commands/escalate-scope.ps1`.
-  - Specialist Subagents: `agents/*-specialist.md`.
-- **S7 · Domain-Driven Targeted Testing** (Skill: `skills/s7-testing/SKILL.md`):
-  - Mandatory Files: `skills/s7-testing/resources/test-commands.md`, `resources/test-driven-development-guide.md`, `rules/AGENTS.md` (AP-004).
-  - 5-Tier Mechanical Verification:
-    - Tier 1: Static Typecheck & Compilation
-    - Tier 2: Mechanical AST & Hygiene Scanners (`pwsh -File commands/check-ui-slop.ps1`, `scripts/check-layout-ast.mjs`, `scripts/check-gesture-parity.mjs`, `scripts/check-route-integrity.mjs`, `scripts/verify-runtime-env.mjs`)
-    - Tier 3: Domain-Driven Targeted Unit Tests (`-Dtest=...`, `vitest path`)
-    - Tier 3B-3D: Headless Smoke & Geometry Gates (`resources/smoke-templates/headless-geometry-smoke.spec.ts`, `resources/smoke-templates/process-lifecycle-smoke.ts`, `resources/smoke-templates/image-buffer-quality-smoke.ts`, `resources/smoke-templates/coordinate-parity-smoke.ts`)
-    - Gate 4: Git Diff Scope Gate (`pwsh -File commands/verify-scope.ps1`)
-  - Verification Runner: `pwsh -File commands/verify-stack.ps1 -Target <DomainClass>`.
-- **S8 · Code Review** (Skill: `skills/s8-code-review/SKILL.md`):
-  - Routing Matrix & Guides: `skills/s8-code-review/resources/task-reviewer-matrix.md`, `skills/s8-code-review/resources/code-review-guide.md`, `resources/submit-template.md`, `resources/review-template.md`.
-  - Mandatory Evidence: Verbatim terminal logs proving exit code 0 from `commands/verify-stack.ps1` and scope verification from `commands/verify-scope.ps1` mandatory in `submit(N).md`.
-  - Aesthetic Immunity Revocation: Reviewers enforce vector parity, selection borders, touch-action, and reject UI slop.
-  - Reviewer Subagents: Matched from `agents/*-reviewer.md` (e.g. `agents/postgres-hibernate-flyway-reviewer.md`, `agents/fullstack-implementation-reviewer.md`, etc.).
-- **S9 · Bug Fix Loop** (Skill: `skills/s9-bug-fix/SKILL.md`):
-  - Mandatory Files: `.agents/session-[SHA]/code-review/review/review(n).md`, `skills/s8-code-review/resources/code-review-guide.md`, `rules/AGENTS.md`, `resources/error-handling-guide.md`, `resources/submit-template.md`.
-  - Re-testing: Mandatory clean re-execution of `skills/s7-testing/SKILL.md`.
-- **S10 · Atomic Commit** (Skill: `skills/s10-git-commit/SKILL.md`):
-  - Commit Standards: `skills/s10-git-commit/resources/commit-examples.md`, `skills/s10-git-commit/resources/breaking-change-guide.md`, `skills/s10-git-commit/resources/commit-split-guide.md`.
-  - Commands: `pwsh -File commands/measure-diff.ps1`, `pwsh -File commands/stage-commit.ps1`.
-- **S11 · GEMINI.md Update & Loop Closure** (Skill: `skills/s11-gemini-update/SKILL.md`):
-  - Documentation Schema & Suggester: `skills/s11-gemini-update/resources/gemini-schema.md`, `resources/gemini-template.md`, `skills/s11-gemini-update/resources/global-skill-suggester.md`, `GEMINI.md`.
-  - Session Cleanup: `pwsh -File commands/clean-session.ps1`.
+- **S0 · Repo Architect** (`skills/s0-repo-architect/SKILL.md`): `skills/s0-repo-architect/schemas/gemini-prd-schema.json`, `skills/s0-repo-architect/schemas/anti-pattern-schema.json`, `skills/s0-repo-architect/templates/gemini-production-template.md`, `skills/s0-repo-architect/templates/directory-tree-explainer-template.txt`, `resources/gemini-template.md`, `skills/s0-repo-architect/scripts/generate-ascii-tree.js`, `skills/s0-repo-architect/scripts/verify-gemini-schema.js`, `skills/verify-harness-generator/SKILL.md`, `skills/formal-verify-generator/SKILL.md`.
+- **S1 · Ingestion & Track Routing** (`skills/s1-orchestrator/SKILL.md`, `skills/workflow-guide/SKILL.md`): `GEMINI.md`, `rules/AGENTS.md`, `resources/engineering-principles.md`, `skills/s1-orchestrator/resources/session-init.md`, `resources/checklist-template.md`, `resources/stacks/_stack-composer.md`, `commands/init-session.ps1`, `skills/s1-orchestrator/resources/fast-mode.md`, `skills/s1-orchestrator/resources/trivial-mode.md`, `skills/s1-orchestrator/resources/duolithic-mode.md`.
+- **S2 · Codebase Audit** (`skills/s2-codebase-audit/SKILL.md`): `resources/audit-template.md`, `skills/s2-codebase-audit/resources/audit-compiler.md`, `skills/s2-codebase-audit/resources/fullstack-persona-bank.md`, `skills/s2-codebase-audit/resources/minecraft-persona-bank.md`, `agents/*-auditor.md`, `agents/audit-compiler.md`.
+- **S3 / S4 / S5 · Planning & Consensus Review** (`skills/s3-planning/SKILL.md`, `skills/s4-plan-review/SKILL.md`, `skills/s5-plan-fix/SKILL.md`): `resources/plan-template.md`, `resources/task-template.md`, `skills/s3-planning/resources/priority-rubric.md`, `skills/design-architect/SKILL.md`, `skills/solution-arena/SKILL.md`, `skills/blast-radius/SKILL.md`, `agents/arena-cross-judge.md`, `agents/empirical-worker.md`, `agents/plan-critic.md`, `skills/s4-plan-review/resources/plan-review-guide.md`, `resources/submit-template.md`, `resources/review-template.md`.
+- **S6 · Coding ONE Task & Hygiene** (`skills/s6-coding/SKILL.md`, `skills/comment-audit/SKILL.md`, `agents/comment-hygiene-reviewer.md`): `resources/senior-dev-standards.md`, `resources/error-handling-guide.md`, `resources/test-driven-development-guide.md`, `skills/s6-coding/resources/stack-detector.md`, `skills/s6-coding/resources/anti-patterns.md`, `resources/stacks/*.md`, `resources/stack-rules/rules-*.md`, `commands/verify-scope.ps1`, `commands/escalate-scope.ps1`, `commands/log-decision.ps1`.
+- **S7 · 5-Tier Testing & Formal Check** (`skills/s7-testing/SKILL.md`, `skills/benchmark-audit/SKILL.md`, `skills/statechart/SKILL.md`, `commands/invoke-statechart.ps1`, `commands/verify-stack.ps1`, `commands/check-ui-slop.ps1`): `skills/s7-testing/resources/test-commands.md`, `scripts/check-layout-ast.mjs`, `scripts/check-gesture-parity.mjs`, `scripts/check-route-integrity.mjs`, `scripts/verify-runtime-env.mjs`, `resources/smoke-templates/*`.
+- **S8 / S9 · Execution-Backed Code Review & Remediation** (`skills/s8-code-review/SKILL.md`, `skills/adversarial-review/SKILL.md`, `agents/adversarial-falsifier-reviewer.md`, `skills/s9-bug-fix/SKILL.md`): `skills/s8-code-review/resources/task-reviewer-matrix.md`, `skills/s8-code-review/resources/code-review-guide.md`, `agents/fullstack-implementation-reviewer.md`, `agents/*-reviewer.md`.
+- **S10 · Batch / Surgical Commit** (`skills/s10-git-commit/SKILL.md`): `commands/auto-commit.ps1` (`scripts/auto-commit.mjs`), `commands/measure-diff.ps1`, `commands/stage-commit.ps1`, `skills/s10-git-commit/resources/commit-examples.md`, `skills/s10-git-commit/resources/breaking-change-guide.md`, `skills/s10-git-commit/resources/commit-split-guide.md`.
+- **S11 · Hardening & GEMINI.md Sync** (`skills/s11-gemini-update/SKILL.md`, `skills/repo-hardening/SKILL.md`, `skills/session-reflect/SKILL.md`): `skills/s11-gemini-update/resources/gemini-schema.md`, `resources/gemini-template.md`, `skills/s11-gemini-update/resources/global-skill-suggester.md`, `commands/clean-session.ps1`.
 
 ## 5. Non-Negotiable Invariants
-1. **Mandatory First Action Invariant (Phase Step 0 Read Gate / AP-009)**: On entering ANY phase (S0–S11), the orchestrating agent MUST explicitly call `view_file` ONCE on all mandatory phase files for that phase transition BEFORE executing any action tool (`run_command`, `write_to_file`, `replace_file_content`, `invoke_subagent`). Active context is cached in working memory throughout the phase, eliminating turn-by-turn re-reading.
-2. **Zero Self-Review Invariant (AP-010)**: The main orchestrating agent is strictly prohibited from authoring `review(n).md` or `audit(n).md` files using `write_to_file` or `replace_file_content`. Reviews (S4, S8) and audits (S2) MUST be delegated to independent subagents via `invoke_subagent`. The main agent is read-only for `code-review/review/` and `audit/bin/`.
-3. Read `GEMINI.md` in full before touching any source file.
-4. Quarantine all session state in `.agents/session-[SHA]/`.
-5. Code exactly ONE task per S6->S7->S8 cycle.
-6. Stage files using AP-005 scope-aware staging (Mode A: per-file, ~50-150 LOC; Mode B: -Scaffold for >= 15 cohesive files with manifest) — never run blind `git add .` (AP-005).
-7. Unanimous LGTM required for plan (S4) and code (S8).
-8. Evidence before assertions: run actual test commands before claiming success.
-9. **Scope Jail Invariant**: All mutations must strictly match declared `target_files` or `infrastructure_files` in `task.md`. Unauthorized edits outside target scope are verified and rejected by `commands/verify-scope.ps1`. Legitimate layout extensions must use `commands/escalate-scope.ps1`.
-10. **Revocation of Aesthetic Immunity**: Code review is not purely syntactic. Mechanical AST linters and headless smoke gates strictly enforce 1:1 avatar geometry, containing block safety, 10px drag gesture thresholds, and image buffer entropy (> 50KB, std-dev > 15.0).
+1. **Turn-1 & Phase Read Gate (`AP-009`)**: Read `GEMINI.md` + `rules/AGENTS.md` + matching `resources/stack-rules/` BEFORE inspecting source files.
+2. **Zero Self-Review (`AP-010`)**: Never write `code-review/review/*` or `audit/bin/*` from the main orchestrator.
+3. **Strict Structural Laws**: `1 OOP type per file`, `<= 1` primary component + `<= 2 inline JSX children` per `.tsx`, zero `AP-001..AP-010`.
+4. **Proof Over Claims (`EP-01`, `EP-06`, `EP-12`)**: Live repro first, fault-injection test proof, drop unproven review claims, harden repeat errors in code/lints before docs.
+5. **No `git push`, No `git add .` (`AP-005`)**: Stage explicitly or run `commands/auto-commit.ps1`; preserve `PascalCase`/`camelCase` identifiers in Conventional Commits (`<= 100` subject / `<= 180` body).
 
 ---
-**Directive**: Acknowledge mode and active stack, initialize `.agents/session-[SHA]/`, and begin S1.
+**Directive**: Acknowledge mode/track and active stack, initialize `.agents/session-[SHA]/`, and begin S1.

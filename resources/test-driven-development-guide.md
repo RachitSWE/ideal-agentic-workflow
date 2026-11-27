@@ -127,3 +127,11 @@ To eliminate this illusion, the S7 phase mandates Tier 3B: Runtime Smoke Verific
 3. **Frontend Component Mount & Contract Verification**:
    - Web frontend tasks MUST execute render/mount tests asserting that components mount without uncaught DOM exceptions and user interactions trigger the API client.
    - `tsc --noEmit` validates static types only; it cannot substitute for automated render tests.
+
+---
+
+## 7. Behavioral Assertion Mandate & Fault-Injection Proof (`EP-01`, `EP-05`, `EP-06`)
+
+Tests written *after* implementation pass dangerously often because an assertion tests the wrong selector, hits a mock default, or never triggers the real code path. Every newly authored domain/smoke/harness assertion MUST follow one of two proofs before trusting green:
+1. **Strict TDD RED -> GREEN**: Run the new test against unmodified code first and verify it fails for the exact expected missing/broken reason before implementing the fix.
+2. **Post-Write Fault Injection (Tautology Check)**: When writing a verification assertion for existing code, temporarily invert the condition, seed a broken payload, or disable the target handler (or confirm against an explicit negative fixture) and observe the assertion FAIL cleanly before reverting the fault and observing PASS. Never leave fault-injection scaffolding behind.
