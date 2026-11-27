@@ -1,0 +1,12 @@
+{
+  "ideal-agentic-workflow-session-bootstrap": {
+    "enabled": true,
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "node scripts/session-bootstrap-hook.mjs",
+        "timeout": 10
+      }
+    ]
+  }
+}
