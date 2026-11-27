@@ -1,6 +1,6 @@
 ---
 name: s5-plan-fix
-description: Executes the plan remediation loop when S4 Plan Review requests changes, systematically resolving architectural criticisms, revising plan.md and task.md, and resubmitting for consensus review.
+description: "Use when S4 Plan Review requests revisions to remediate plan criticisms, update plan.md and task.md, and resubmit until unanimous LGTM is achieved."
 ---
 
 # S5 Plan Fix
