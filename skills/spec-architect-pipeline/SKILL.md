@@ -1,6 +1,6 @@
 ---
 name: spec-architect-pipeline
-description: "Executes the autonomous SP1–SP6 Spec Architecture Pipeline, interviewing the user via /grill-me, authoring comprehensive specs via /writing-plans, conducting multi-agent reviews via S4, and registering approved specs into GEMINI.md."
+description: "Use for large multi-epic initiatives requiring interactive requirements interrogation, comprehensive spec authoring, unanimous multi-agent spec review, and GEMINI.md registration before coding."
 ---
 
 # Spec Architecture Pipeline (SP1–SP6)
