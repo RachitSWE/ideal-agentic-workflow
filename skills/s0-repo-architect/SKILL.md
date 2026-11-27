@@ -1,6 +1,6 @@
 ---
 name: s0-repo-architect
-description: Establishes an authoritative GEMINI.md PRD baseline for greenfield or brownfield repositories before initiating S1 Orchestrator, executing exhaustive discovery, stack pinning, max-depth ASCII directory mapping, and schema certification.
+description: "Use proactively when GEMINI.md is missing or stale in a greenfield or brownfield repository to establish an authoritative PRD baseline, pinned stack manifest, and verification harness before S1."
 ---
 
 # S0 Repository Production Architect
@@ -198,7 +198,7 @@ Anti-Patterns Structured: PASS
 
 ## 6. Critical Anti-Pattern Anatomy Standards
 
-Every anti-pattern documented in Section 6 of `GEMINI.md` MUST comply with the schema defined in [`schemas/anti-pattern-schema.json`](file:///C:/Users/HP/.gemini/config/plugins/ai-plugin/skills/repo-production-architect/schemas/anti-pattern-schema.json). Generic workflow complaints are strictly forbidden.
+Every anti-pattern documented in Section 6 of `GEMINI.md` MUST comply with `skills/s0-repo-architect/schemas/anti-pattern-schema.json`. Generic workflow complaints are strictly forbidden.
 
 ### 6.1 Required Clause Definitions
 Each anti-pattern entry MUST define three structured sub-clauses:
@@ -245,3 +245,4 @@ Before concluding any session that establishes or updates a repository baseline,
 5. **Max-Depth Directory Tree**: Section 4 contains a complete ASCII tree generated via `git ls-files` with $\ge 80\%$ of lines annotated with aligned `← Explainer` strings.
 6. **Anti-Pattern Count & Structure**: Section 6 contains between 10 and 15 project-specific anti-patterns, each with explicit *Violation*, *Consequence*, and *Mitigation* entries.
 7. **Automated Gate Success**: Executing `node verify-gemini-schema.js --file <path>` returns exit code `0` with `[STATUS] Verification PASSED`.
+8. **Optional Verification & Formal Harness Setup**: If the repo lacks an end-to-end user-POV runtime harness or models critical concurrency/state machines, recommend/bootstrap `.agents/skills/verify-<app>/` via `skills/verify-harness-generator/SKILL.md` (maintained by `skills/verify-harness-maintainer/SKILL.md`) or TLA+ specs via `skills/formal-verify-generator/SKILL.md`.
