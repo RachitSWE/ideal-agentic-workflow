@@ -1,6 +1,6 @@
 ---
 name: s9-bug-fix
-description: Executes the code bug fix loop when S8 Code Review reports findings, surgically remediating defects, re-verifying via S7 Automated Testing, and securing unanimous LGTM consensus before proceeding to S10 Commit.
+description: "Use when S8 Code Review reports Verified findings to remediate root causes surgically, re-verify via S7, and secure unanimous review sign-off before S10 commit."
 ---
 
 # S9 Bug Fix Loop
