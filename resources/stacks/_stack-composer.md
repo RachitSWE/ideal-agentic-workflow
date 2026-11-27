@@ -45,6 +45,11 @@ Scan the canonical subdirectories in `resources/stacks/` and match extracted tec
 | Minecraft, Fabric, Fabric Loom, Yarn, Mixin | `resources/stacks/minecraft/mc-fabric.md` | Minecraft Fabric Modding |
 | Minecraft, NeoForge, Forge, Parchment, ModDevGradle | `resources/stacks/minecraft/mc-forge.md` | Minecraft NeoForge / Forge |
 
+#### E. Optional Domain Profiles (`resources/stacks/`)
+| Technology Keywords | Applicable Stack Pack | Primary Domain |
+| :--- | :--- | :--- |
+| Discord.js, JDA, Slash Commands, Welcomer, Customiser, Opentype.js | `resources/stacks/discord-bot-customizer.md` (`resources/stack-rules/rules-discord-bot-customizer.md`) | Discord Bot & Canvas Customizer |
+
 ### Step 3: Handle Unmatched Technologies
 If a project uses a stack not present in the table above:
 1. Note the unmatched technology in `context.md`.
@@ -55,7 +60,7 @@ If a project uses a stack not present in the table above:
 
 ## 3. Formatting and Persisting `context.md`
 
-Once matched, write the composite stack configuration directly to `.agents/session-[SHA]/context.md` using the following schema:
+Once matched, resolve each stack pack in `resources/stacks/` **plus** its matching on-demand invariant rule file in `resources/stack-rules/` (`rules-database-*.md`, `rules-backend-*.md`, `rules-frontend-*.md`, `rules-minecraft-*.md`, or `rules-discord-bot-customizer.md`), and write the composite stack configuration directly to `.agents/session-[SHA]/context.md` using the following schema:
 
 ```markdown
 # Session Context
