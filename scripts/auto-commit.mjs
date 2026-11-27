@@ -5,8 +5,9 @@
  * Features:
  * - Safe NUL-delimited (-z) git status & numstat parsing (handles spaces, deletions, renames, untracked, staged)
  * - Feature/directory + test-pair clustering prior to <=150 LOC batching; single >150 LOC files flagged atomic
- * - Optional Gemini API commit message synthesis via env GEMINI_API_KEY / AI_COMMIT_API_KEY (zero hardcoded keys)
- * - Deterministic offline fallback preserving PascalCase/camelCase identifiers & lowercase type(scope):
+ * - Gemini API commit message synthesis via env GEMINI_API_KEY / AI_COMMIT_API_KEY (zero hardcoded keys, zero fallback)
+ * - Fail-closed on missing API key or HTTP 429 rate limits so re-invoking resumes from the next uncommitted batch
+ * - Preserves PascalCase/camelCase identifiers & lowercase type(scope):
  * - Explicit file staging only (NEVER git add ., NEVER git push)
  */
 
@@ -31,7 +32,7 @@ const PERMITTED_TYPES = new Set([
   'chore',
   'style',
 ]);
-const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+const GEMINI_MODELS = ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite'];
 
 const COMMIT_SCHEMA = {
   type: 'OBJECT',
@@ -270,46 +271,6 @@ function fBaseConfig(lowerPath) {
   );
 }
 
-function extractIdentifiers(cwd, batch) {
-  const symbols = new Set();
-  for (const f of batch) {
-    const base = path.posix.basename(f.path.replace(/\\/g, '/'), path.posix.extname(f.path));
-    if (/[A-Z][a-zA-Z0-9]+/.test(base)) symbols.add(base);
-    if (f.status === 'D' || f.binary) continue;
-    try {
-      const text = fs.readFileSync(path.join(cwd, f.path), 'utf8').slice(0, 4000);
-      for (const m of text.matchAll(/\b(?:class|interface|type|function|enum|record)\s+([A-Za-z_][A-Za-z0-9_]*)/g)) {
-        symbols.add(m[1]);
-        if (symbols.size >= 3) break;
-      }
-    } catch {
-      // Ignore unreadable file snippets in fallback mode
-    }
-    if (symbols.size >= 3) break;
-  }
-  return [...symbols];
-}
-
-export function buildFallbackCommit(batch, isAtomic, cwd = null) {
-  const { type, scope } = inferTypeAndScope(batch);
-  const verbs = batch.every((f) => f.status === 'D')
-    ? 'remove'
-    : batch.every((f) => f.status === 'R')
-      ? 'rename'
-      : batch.some((f) => f.status === '??' || f.status === 'A')
-        ? 'add'
-        : 'update';
-
-  const names = batch.map((f) => path.posix.basename(f.path.replace(/\\/g, '/')));
-  const symbols = cwd ? extractIdentifiers(cwd, batch) : [];
-  const targetLabel = symbols[0] || names[0] || 'module';
-  const extraCount = batch.length > 1 ? ` and ${batch.length - 1} related file(s)` : '';
-
-  const subject = `${type}(${scope}): ${verbs} ${targetLabel}${extraCount}`;
-  const bodyCore = `${verbs === 'update' ? 'Update' : verbs[0].toUpperCase() + verbs.slice(1)} ${names.slice(0, 3).join(', ')}${batch.length > 3 ? ` (+${batch.length - 3} more)` : ''} with ${symbols.length ? `${symbols.join(', ')} updates` : 'scoped changes'}.`;
-  return normalizeCommit({ subject, body: bodyCore }, batch, isAtomic);
-}
-
 function truncateCleanly(text, maxLen, { sentenceAware = false } = {}) {
   if (text.length <= maxLen) return text;
   const sliced = text.slice(0, maxLen);
@@ -405,13 +366,16 @@ function buildCompactDiffSummary(cwd, file) {
 }
 
 async function generateWithGemini(apiKey, prompt) {
+  const apiBase = (process.env.GEMINI_API_BASE_URL || 'https://generativelanguage.googleapis.com').replace(/\/+$/, '');
   let lastErr = null;
+  let sawRateLimit = false;
   for (const model of GEMINI_MODELS) {
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+      const url = `${apiBase}/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(15000),
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
@@ -422,7 +386,10 @@ async function generateWithGemini(apiKey, prompt) {
         }),
       });
       if (!res.ok) {
-        lastErr = new Error(`Gemini HTTP ${res.status}`);
+        if (res.status === 429) sawRateLimit = true;
+        const err = new Error(`Gemini HTTP ${res.status}`);
+        err.status = res.status;
+        lastErr = err;
         continue;
       }
       const data = await res.json();
@@ -431,6 +398,11 @@ async function generateWithGemini(apiKey, prompt) {
     } catch (err) {
       lastErr = err;
     }
+  }
+  if (sawRateLimit) {
+    const rlErr = new Error('Gemini HTTP 429 (rate limit)');
+    rlErr.status = 429;
+    throw rlErr;
   }
   throw lastErr || new Error('Gemini API call failed');
 }
@@ -521,7 +493,7 @@ export async function runAutoCommit(options = {}) {
   const targetBatches = Number.isFinite(batchLimit) ? allBatches.slice(0, batchLimit) : allBatches;
   const apiKeys = [...new Set([process.env.GEMINI_API_KEY, process.env.AI_COMMIT_API_KEY].map((k) => (k || '').trim()).filter(Boolean))];
   if (apiKeys.length === 0) {
-    console.warn('[AUTO-COMMIT] [WARN] No GEMINI_API_KEY or AI_COMMIT_API_KEY in environment — using deterministic offline fallback.');
+    throw new Error('Missing GEMINI_API_KEY or AI_COMMIT_API_KEY; fallback commit generation is disabled.');
   }
   const repoContext = loadRepoContext(cwd);
   const results = [];
@@ -529,41 +501,40 @@ export async function runAutoCommit(options = {}) {
   for (let i = 0; i < targetBatches.length; i++) {
     const batch = targetBatches[i];
     const isAtomic = Boolean(batch.isAtomic);
-    let commitMsg;
+    const prompt = [
+      'You are a Principal Engineer generating one S10 Conventional Commit.',
+      `Repository Context:\n${repoContext}`,
+      'Rules:',
+      '- Subject: <type>(<scope>): <imperative message>, lowercase type/scope & starting verb, <= 100 chars, no trailing period.',
+      '- Body: strictly 1 concise complete sentence (<= 160 chars) explaining mechanism & rationale.',
+      '- Preserve exact PascalCase/camelCase code identifiers in both subject message and body.',
+      isAtomic ? "- Single file > max LOC: prefix body with 'atomic: <reason>'." : '',
+      'Files:',
+      ...batch.map((f) => `- ${f.status} ${f.path} (+${f.insertions}/-${f.deletions})`),
+      'Diffs:',
+      batch.map((f) => buildCompactDiffSummary(cwd, f)).join('\n\n'),
+    ]
+      .filter(Boolean)
+      .join('\n\n');
 
-    if (apiKeys.length > 0) {
-      const prompt = [
-        'You are a Principal Engineer generating one S10 Conventional Commit.',
-        `Repository Context:\n${repoContext}`,
-        'Rules:',
-        '- Subject: <type>(<scope>): <imperative message>, lowercase type/scope & starting verb, <= 100 chars, no trailing period.',
-        '- Body: strictly 1 concise complete sentence (<= 160 chars) explaining mechanism & rationale.',
-        '- Preserve exact PascalCase/camelCase code identifiers in both subject message and body.',
-        isAtomic ? "- Single file > max LOC: prefix body with 'atomic: <reason>'." : '',
-        'Files:',
-        ...batch.map((f) => `- ${f.status} ${f.path} (+${f.insertions}/-${f.deletions})`),
-        'Diffs:',
-        batch.map((f) => buildCompactDiffSummary(cwd, f)).join('\n\n'),
-      ]
-        .filter(Boolean)
-        .join('\n\n');
-
-      let lastApiErr = null;
-      for (const key of apiKeys) {
-        try {
-          const raw = await generateWithGemini(key, prompt);
-          commitMsg = normalizeCommit(raw, batch, isAtomic);
-          break;
-        } catch (err) {
-          lastApiErr = err;
-        }
+    let commitMsg = null;
+    let lastApiErr = null;
+    let sawRateLimit = false;
+    for (const key of apiKeys) {
+      try {
+        const raw = await generateWithGemini(key, prompt);
+        commitMsg = normalizeCommit(raw, batch, isAtomic);
+        break;
+      } catch (err) {
+        if (err?.status === 429) sawRateLimit = true;
+        lastApiErr = err;
       }
-      if (!commitMsg) {
-        console.warn(`[AUTO-COMMIT] [WARN] Gemini API fallback for batch ${i + 1}: ${lastApiErr?.message || 'unknown error'}`);
-        commitMsg = buildFallbackCommit(batch, isAtomic, cwd);
+    }
+    if (!commitMsg) {
+      if (sawRateLimit) {
+        throw new Error(`Batch ${i + 1}/${targetBatches.length} commit failed due to rate limit (HTTP 429). Wait and re-invoke auto-commit to continue.`);
       }
-    } else {
-      commitMsg = buildFallbackCommit(batch, isAtomic, cwd);
+      throw new Error(`Batch ${i + 1}/${targetBatches.length} commit failed: ${lastApiErr?.message || 'Gemini API request failed'}`);
     }
 
     const flag = isAtomic ? ' [ATOMIC]' : '';
