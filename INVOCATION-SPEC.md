@@ -8,7 +8,7 @@ This pipeline conducts a deep 10–12 question system design interview (`/grill-
 ## 📋 Copyable Spec Invocation Prompt
 
 ```markdown
-# INVOKE: spec-architect-pipeline (v1.3.4)
+# INVOKE: spec-architect-pipeline (v2.0.0)
 
 ## 1. Feature Brief & High-Level Intent
 - **Feature Name**: [INSERT KEBAB-CASE NAME, e.g. transaction-history]
@@ -30,21 +30,21 @@ flowchart TD
 ### Step-by-Step Execution Directives & Mandatory Files to Read
 
 - **SP1 · Ingestion & Scaffolding** (Skill: `skills/spec-architect-pipeline/SKILL.md`):
-  - Mandatory Files: `GEMINI.md`, `rules/AGENTS.md`, `skills/spec-architect-pipeline/SKILL.md`.
-  - Scaffolding Script: `pwsh -File commands/init-spec-session.ps1 -Name [name]`.
+  - Mandatory Files: `GEMINI.md`, `rules/AGENTS.md`, `resources/engineering-principles.md`, `skills/spec-architect-pipeline/SKILL.md`.
+  - Scaffolding Script: `powershell|pwsh -File commands/init-spec-session.ps1 -Name [name]`.
 - **SP2 · System Design Grilling (/grill-me)**:
-  - Mandatory Rubric: `skills/spec-architect-pipeline/resources/spec-grill-rubric.md` (10–12 architectural interview dimensions).
+  - Mandatory Rubric: `skills/spec-architect-pipeline/resources/spec-grill-rubric.md` (10–12 architectural interview dimensions) + `skills/design-architect/SKILL.md` for contested boundaries.
   - Output Log: `.agents/specs/session-[SHA]/grill/grill-log.md`.
 - **SP3 · Spec Authoring (/writing-plans)**:
   - Mandatory Schema: `skills/spec-architect-pipeline/resources/spec-template.md`, `resources/test-driven-development-guide.md`, `resources/error-handling-guide.md`.
   - Target Spec: `.agents/specs/session-[SHA]/YYYY-MM-DD_[name]_SPEC.md`.
 - **SP4 · Multi-Agent Spec Review**:
-  - Review Guidelines & Templates: `skills/spec-architect-pipeline/resources/spec-review-guide.md`, `resources/submit-template.md`, `resources/review-template.md`.
-  - Reviewer Subagents: `agents/spec-system-architect-reviewer.md`, `agents/spec-security-edgecase-reviewer.md`, `agents/spec-testability-scale-reviewer.md`.
+  - Review Guidelines & Templates: `skills/spec-architect-pipeline/resources/spec-review-guide.md`, `skills/adversarial-review/SKILL.md`, `resources/submit-template.md`, `resources/review-template.md`.
+  - Reviewer Subagents: `agents/spec-system-architect-reviewer.md`, `agents/spec-security-edgecase-reviewer.md`, `agents/spec-testability-scale-reviewer.md`, `agents/adversarial-falsifier-reviewer.md`.
 - **SP5 · Spec Fix Loop**:
   - Mandatory Findings: `.agents/specs/session-[SHA]/code-review/review/review(n).md`, `skills/spec-architect-pipeline/resources/spec-review-guide.md`, `resources/submit-template.md`.
 - **SP6 · Baseline & GEMINI.md Sync**:
-  - Automation Command: `pwsh -File commands/sync-spec-gemini.ps1 -Sha [SHA] -Title "[Title]" -Summary "[Summary]"`.
+  - Automation Command: `powershell|pwsh -File commands/sync-spec-gemini.ps1 -Sha [SHA] -Title "[Title]" -Summary "[Summary]"`.
   - Target Document: `GEMINI.md` (§5 Open Features).
 
 ## 3. Non-Negotiable Invariants
@@ -67,7 +67,7 @@ Once SP6 completes, the certified spec is isolated in `.agents/specs/session-[SH
 To implement the feature, simply invoke the master S1–S11 workflow:
 
 ```markdown
-# INVOKE: ideal-agentic-workflow (v1.3.4)
+# INVOKE: ideal-agentic-workflow (v2.0.0)
 
 ## 1. Operating Mode
 - [x] **Standard**
