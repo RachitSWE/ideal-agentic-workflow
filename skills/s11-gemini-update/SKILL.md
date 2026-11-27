@@ -1,6 +1,6 @@
 ---
 name: s11-gemini-update
-description: "Executes the final documentation sync and PRD generation, maintaining authoritative project context, schema integrity, and monotonic updates."
+description: "Use after task verification completes to triage lessons learned into repo-hardening code/lint fixes, decision logs, or minimal GEMINI.md truth updates."
 ---
 
 # S11 GEMINI.md Update
@@ -25,7 +25,10 @@ Before modifying `GEMINI.md` or emitting loop closure suggestions, the orchestra
 1. **Schema & Evolution Guidelines**:
    - `skills/s11-gemini-update/resources/gemini-schema.md` (Strict non-destructive editing boundaries, section immutability, and schema rules)
    - `resources/gemini-template.md` (Authoritative baseline GEMINI.md template reference)
-2. **Skill Suggestion Registry**:
+2. **Hardening, Decision Log & Skill Suggestion Registry**:
+   - `skills/repo-hardening/SKILL.md` (Triage recurring mistakes into code/types/lint/tests BEFORE adding prose rules)
+   - `skills/decision-log/SKILL.md` & `commands/log-decision.ps1` (Archive/review `.agents/session-[SHA]/decision.tsv` iterations cleanly)
+   - `skills/session-reflect/SKILL.md` (Optional post-session distillation of workflow friction into skill edits)
    - `skills/s11-gemini-update/resources/global-skill-suggester.md` (Taxonomy and selection criteria for recommending 1-3 global skills)
 3. **Target Repository State**:
    - `GEMINI.md` (The living Single Source of Truth document in the repository root)
@@ -45,8 +48,10 @@ For Fast Mode, the agent MUST apply the override: "Lightweight update — only S
 For the Trivial Protocol, the agent MUST apply the override: "Skip S11 (no knowledge base update needed for doc-only changes)."
 
 ### 3.1 Finalization and Loop Closure Protocol
-Before executing any modifications, the agent MUST explicitly instruct itself to read `skills/s11-gemini-update/resources/gemini-schema.md` to internalize the strict non-destructive editing boundaries. 
-The agent MUST surgically apply its updates to `GEMINI.md` using precise file editing tools, ensuring zero unintended deletions occur.
+Before executing any modifications, read `skills/s11-gemini-update/resources/gemini-schema.md` for non-destructive editing boundaries, and triage session friction:
+- **Recurring mistake class (`>= 2` occurrences or user correction)** -> Fix structurally via `skills/repo-hardening/SKILL.md` (Architecture -> Types -> Lint -> Test -> Docs last) instead of bloating `GEMINI.md` or `AGENTS.md`.
+- **Completed architecture / Open Features shift** -> Update `GEMINI.md` surgically with zero unintended deletions.
+- **Unresolved workflow friction** -> Optionally distill improvements via `skills/session-reflect/SKILL.md`.
 Once the documentation is successfully synchronized, the agent MUST instruct itself to read `skills/s11-gemini-update/resources/global-skill-suggester.md`.
 The agent MUST emit 1 to 3 highly contextual Global Skill Suggestions to the user, based on the friction points observed during the session.
 After presenting the skill suggestions, the agent MUST formally terminate the workflow sequence by emitting the exact loop signal to the user.
