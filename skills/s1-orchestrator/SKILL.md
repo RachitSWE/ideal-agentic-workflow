@@ -1,6 +1,6 @@
 ---
 name: s1-orchestrator
-description: Initializes the ideal-agentic-workflow session, reads GEMINI.md, generates the session SHA, detects the operating mode, and prepares the workspace for the S2 Audit phase.
+description: "Use proactively as the mandatory Turn-1 entry point for every engineering task, bugfix, feature, refactor, performance trace, or codebase question to load GEMINI.md, classify the task track, and initialize .agents/session-[SHA]/."
 ---
 
 # S1 Orchestrator
@@ -32,17 +32,25 @@ Before running initialization scripts or scaffolding directories, the agent MUST
 
 1. **Primary Project Specification & Rules**:
    - `GEMINI.md` (Read in full before opening any source code file)
-   - `rules/AGENTS.md` (Global Senior Developer Invariants AP-001 through AP-008)
+   - `rules/AGENTS.md` (Global Behavioral Charter: `AP-001..AP-010`, `EP-01..EP-12`, and strict OOP/JSX modularity)
+   - `resources/engineering-principles.md` (Detailed 12 Engineering Principles `EP-01..EP-12`)
 2. **Session Initialization Resources & Automation**:
    - `skills/s1-orchestrator/resources/session-init.md` (Timestamp SHA generation and directory layout)
    - `resources/checklist-template.md` (Master execution checklist schema for `.agents/session-[SHA]/CHECKLIST.md`)
    - `commands/init-session.ps1` (Cross-platform PowerShell scaffolding script)
-3. **Mode Resources (Read corresponding mode detected)**:
-   - `skills/s1-orchestrator/resources/fast-mode.md` (Single-task, low-overhead mode rules)
+3. **Classic Mode & Empirical Track Playbooks (Read the routed track/mode)**:
+   - `skills/s1-orchestrator/resources/fast-mode.md` (Single-task <= 3 files / <= 100 LOC, low-overhead mode rules)
    - `skills/s1-orchestrator/resources/trivial-mode.md` (Docs-only bypass rules)
    - `skills/s1-orchestrator/resources/duolithic-mode.md` (Dual-conversation R-Agent delegation rules)
+   - `skills/s1-orchestrator/resources/tracks/bugfix-mode.md` (Live repro, trace/runtime forensics, minimal evidence fix)
+   - `skills/s1-orchestrator/resources/tracks/perf-hillclimb-mode.md` (Baseline trace, mantra cascade, hillclimb loop)
+   - `skills/s1-orchestrator/resources/tracks/prototype-mode.md` (Throwaway scratch exploration & variant switcher)
+   - `skills/s1-orchestrator/resources/tracks/investigation-mode.md` (Read-only cited Q&A / git-history archaeology)
+   - `skills/s1-orchestrator/resources/tracks/refactor-mode.md` (Contract-pinned structural simplification)
+   - `skills/s1-orchestrator/resources/tracks/autonomous-mode.md` (Predicate-locked unattended loop + decision log)
+   - `skills/s1-orchestrator/resources/tracks/visual-parity.md` (Baseline screenshot-diff visual migration)
 4. **Stack Composition**:
-   - `resources/stacks/_stack-composer.md` (Mapping detected tech stack to active stack packs)
+   - `resources/stacks/_stack-composer.md` (Mapping detected tech stack to active stack packs & `resources/stack-rules/`)
 
 ---
 
@@ -145,12 +153,21 @@ We MUST record the detected mode in the session directory for persistence.
 
 Precondition: The session directory tree has been initialized.
 
-1. Analyze the user's initial prompt for mode trigger keywords (`/fast mode`, `/trivial`, `/duolithic mode`).
-   - Expected Output: The requested mode (or the default Standard Mode) is identified.
-2. Write the identified mode to `.agents/session-[SHA]/mode.txt`.
-   - Expected Output: A file containing the mode string (e.g., "fast") exists.
-3. Depending on the detected mode, read the corresponding resource file (`skills/s1-orchestrator/resources/duolithic-mode.md`, `skills/s1-orchestrator/resources/fast-mode.md`, or `skills/s1-orchestrator/resources/trivial-mode.md`).
-   - Expected Output: The agent explicitly loads and understands the specific protocol rules for the requested mode.
+1. Classify user intent using the **Option A Deterministic Routing Matrix**:
+   | Intent / Trigger | Routed Track / Mode | Playbook / Resource |
+   |---|---|---|
+   | New feature, migration, cross-boundary architecture | **Standard (`S2 -> S11`)** or **Spec (`SP1 -> SP6`)** | `skills/s3-planning/SKILL.md` / `skills/spec-architect-pipeline/SKILL.md` |
+   | Defect, regression, trace/runtime forensics (`/bugfix`) | **Bugfix Track** | `skills/s1-orchestrator/resources/tracks/bugfix-mode.md` |
+   | Latency, memory, throughput, hillclimb (`/perf`, `/hillclimb`) | **Perf/Hillclimb Track** | `skills/s1-orchestrator/resources/tracks/perf-hillclimb-mode.md` |
+   | Layout/API design fork (`/prototype`) | **Prototype Track** | `skills/s1-orchestrator/resources/tracks/prototype-mode.md` |
+   | Read-only code Q&A / architecture why (`/investigate`) | **Investigation Track** | `skills/s1-orchestrator/resources/tracks/investigation-mode.md` |
+   | Behavior-preserving cleanup (`/refactor`) | **Refactor Track** | `skills/s1-orchestrator/resources/tracks/refactor-mode.md` |
+   | Unattended predicate loop (`/autonomous`, `/goal`) | **Autonomous Track** | `skills/s1-orchestrator/resources/tracks/autonomous-mode.md` |
+   | Pixel-exact UI migration (`/visual-parity`) | **Visual Parity Track** | `skills/s1-orchestrator/resources/tracks/visual-parity.md` |
+   | Explicit classic modifiers (`/fast mode`, `/trivial`, `/duolithic mode`) | **Fast / Trivial / Duolithic** | `skills/s1-orchestrator/resources/fast-mode.md`, `skills/s1-orchestrator/resources/trivial-mode.md`, `skills/s1-orchestrator/resources/duolithic-mode.md` |
+   If ambiguous between tracks, default safely to **Standard Track (`S2 -> S11`)** or route through `skills/workflow-guide/SKILL.md` when the user only asked which workflow to use.
+2. Write the identified mode/track slug (e.g., `standard`, `bugfix`, `perf-hillclimb`, `prototype`, `investigation`, `refactor`, `autonomous`, `visual-parity`, `fast`, `trivial`, `duolithic`) to `.agents/session-[SHA]/mode.txt`.
+3. Explicitly read the matching resource/track file so phase overrides, planning rules, and verification requirements are active in context.
 
 Postcondition: The operating mode is permanently recorded and the agent knows which protocol to follow.
 
