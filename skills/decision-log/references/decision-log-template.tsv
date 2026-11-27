@@ -1,0 +1,2 @@
+ts	phase	decision	why	action	evidence	result
+2026-11-27T00:00:00Z	baseline	record initial latency	freeze workload before tuning	note	node bench.mjs (median 5 runs)	42ms p50
