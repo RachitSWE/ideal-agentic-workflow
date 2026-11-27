@@ -8,7 +8,7 @@ on:
 
 jobs:
   verify:
-    name: Citation Integrity & Schema Validation
+    name: Citation Integrity, Hook Safety & Offline Test Suites
     runs-on: ubuntu-latest
 
     steps:
@@ -20,17 +20,42 @@ jobs:
         with:
           node-version: 22
 
-      - name: Validate plugin.json Schema & Syntax
+      - name: Validate plugin.json and hooks.json Manifests
         run: |
           node -e "
             const fs = require('fs');
-            const data = JSON.parse(fs.readFileSync('plugin.json', 'utf8'));
-            if (!data.name || !data.version) {
+            const plugin = JSON.parse(fs.readFileSync('plugin.json', 'utf8'));
+            if (!plugin.name || !plugin.version) {
               console.error('Invalid plugin.json: name or version missing');
               process.exit(1);
             }
-            console.log('plugin.json validated successfully: ' + data.name + ' v' + data.version);
+            const hooks = JSON.parse(fs.readFileSync('hooks.json', 'utf8'));
+            const entries = Object.entries(hooks);
+            if (entries.length === 0) {
+              console.error('hooks.json must define at least one named hook');
+              process.exit(1);
+            }
+            for (const [name, cfg] of entries) {
+              if (!cfg || !Array.isArray(cfg.SessionStart) || cfg.SessionStart.length === 0 || cfg.PreToolUse || cfg.PostToolUse) {
+                console.error('Hook ' + name + ' must define SessionStart only without PreToolUse/PostToolUse blockers');
+                process.exit(1);
+              }
+            }
+            console.log('Validated manifests: ' + plugin.name + ' v' + plugin.version);
           "
 
       - name: Run Physical File Citation & Asset Verification Suite
         run: node scripts/verify-file-citations.js
+
+      - name: Run Plugin Structure, Hook, Scanner & Auto-Commit Unit Suites
+        run: node --test scripts/tests/*.test.mjs
+
+      - name: Run Statechart Compiler, Replay & Linux CLI Tests
+        run: |
+          chmod +x skills/statechart/scripts/statechart skills/statechart/scripts/test/java.ts
+          node --disable-warning=ExperimentalWarning --test \
+            skills/statechart/scripts/test/messages.test.ts \
+            skills/statechart/scripts/test/pipeline.test.ts \
+            skills/statechart/scripts/test/chart.test.ts \
+            skills/statechart/scripts/test/tlc-out.test.ts \
+            skills/statechart/scripts/test/cli.test.ts
