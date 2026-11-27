@@ -1,6 +1,6 @@
 ---
 name: s2-codebase-audit
-description: "Executes the comprehensive multi-agent codebase audit based on repository size, ensuring all architectural and domain constraints are checked."
+description: "Use after S1 Orchestrator initializes a session to audit the target codebase slice, check domain invariants, and produce actionable findings before planning."
 ---
 
 # S2 Codebase Audit
